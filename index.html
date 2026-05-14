@@ -232551,6 +232551,7 @@ function drawRoutes(data) {
   
   data.routes.forEach((route, idx) => {
     if (route.polyline && route.polyline.length > 0) {
+      // 画路线
       var polyline = new AMap.Polyline({
         path: route.polyline,
         strokeColor: colors[idx % colors.length],
@@ -232560,6 +232561,23 @@ function drawRoutes(data) {
         lineCap: 'round'
       });
       map.add(polyline);
+
+      // 在路线中点添加距离/时间标注
+      var midIdx = Math.floor(route.polyline.length / 2);
+      var midPos = route.polyline[midIdx];
+      var distText = route.distance ? route.distance + 'km' : '';
+      var timeText = route.time ? route.time + 'h' : '';
+      var labelText = distText + (distText && timeText ? ' | ' : '') + timeText;
+      
+      if (labelText && midPos) {
+        var labelMarker = new AMap.Marker({
+          position: midPos,
+          zIndex: 100,
+          content: '<div style="background:' + colors[idx % colors.length] + ';color:#fff;padding:3px 10px;border-radius:12px;font-size:13px;font-weight:bold;white-space:nowrap;box-shadow:0 2px 6px rgba(0,0,0,0.3);border:2px solid #fff;">' + labelText + '</div>',
+          offset: new AMap.Pixel(0, -15)
+        });
+        map.add(labelMarker);
+      }
     }
   });
 
