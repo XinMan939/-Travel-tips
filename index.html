@@ -47,7 +47,6 @@ body{font-family:-apple-system,"Microsoft YaHei",sans-serif;height:100vh;display
 <script>
 var map;
 var layerGroup = [];
-var routeData = null;
 
 // 城市显示名映射
 var cityDisplayNames = {
@@ -72,8 +71,8 @@ function initMap() {
     mapStyle: "amap://styles/normal"
   });
 
-  // 加载路线数据
-  (() => { const data = {
+  // 内嵌路线数据（无需额外加载JSON）
+  var data = {
   "cities": [
     {
       "name": "宁乡",
@@ -232540,26 +232539,23 @@ function initMap() {
   ],
   "totalDistance": 5210
 };
-      routeData = data;
-      drawRoutes(data);
-      updateUI(data);
-      map.setFitView();
-    })
-    .catch(err => {
-      console.error('加载路线数据失败:', err);
-      alert('加载路线数据失败，请确保route_data_v7.json文件存在！');
-    });
+
+  drawRoutes(data);
+  updateUI(data);
+  map.setFitView();
 }
 
 function drawRoutes(data) {
-  // 画每条路线
+  // 画每条路线，每段不同颜色
+  var colors = ['#e65100', '#1976d2', '#388e3c', '#7b1fa2', '#c2185b', '#f57c00', '#00796b', '#5d4037', '#455a64', '#d32f2f', '#303f9f'];
+  
   data.routes.forEach((route, idx) => {
     if (route.polyline && route.polyline.length > 0) {
       var polyline = new AMap.Polyline({
         path: route.polyline,
-        strokeColor: '#e65100',
+        strokeColor: colors[idx % colors.length],
         strokeWeight: 4,
-        strokeOpacity: 0.8,
+        strokeOpacity: 0.85,
         lineJoin: 'round',
         lineCap: 'round'
       });
@@ -232577,7 +232573,7 @@ function drawRoutes(data) {
         content: displayName,
         direction: 'top',
         offset: new AMap.Pixel(0, -5),
-        style: {fontSize:'11px',color:'#2a5a1a',background:'#fff',padding:'1px 4px',borderRadius:'3px'}
+        style: {fontSize:'12px',color:'#2a5a1a',background:'#fff',padding:'2px 6px',borderRadius:'4px','fontWeight':'bold'}
       }
     });
     map.add(marker);
@@ -232592,15 +232588,18 @@ function updateUI(data) {
   
   // 更新侧边栏
   var routeListHtml = '';
+  var colors = ['#e65100', '#1976d2', '#388e3c', '#7b1fa2', '#c2185b', '#f57c00', '#00796b', '#5d4037', '#455a64', '#d32f2f', '#303f9f'];
+  
   data.routes.forEach((route, idx) => {
     var fromName = cityDisplayNames[route.from] || route.from;
     var toName = cityDisplayNames[route.to] || route.to;
     var distance = route.distance ? route.distance + 'km' : '未知';
     var time = route.time ? route.time + 'h' : '未知';
+    var color = colors[idx % colors.length];
     
-    routeListHtml += '<div class="route-segment">' +
-      '<h4>D' + (idx + 1) + ' ' + fromName + ' → ' + toName + '</h4>' +
-      '<div class="info">📏 距离：' + distance + '<br>⏱️ 时间：' + time + '</div>' +
+    routeListHtml += '<div class="route-segment" style="border-left-color:' + color + '">' +
+      '<h4>D' + (idx + 1) + ' <span style="color:' + color + '">' + fromName + ' → ' + toName + '</span></h4>' +
+      '<div class="info">📏 距离：' + distance + '&nbsp;&nbsp;⏱️ 时间：' + time + '</div>' +
       '</div>';
   });
   
