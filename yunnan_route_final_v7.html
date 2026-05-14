@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>湘桂云贵环线·实际公路路线V7</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,"Microsoft YaHei",sans-serif;height:100vh;display:flex;flex-direction:column;background:#e8e4dc}
+#topbar{background:linear-gradient(135deg,#1a5a2a,#2d8a3e);padding:10px 18px;color:#fff;box-shadow:0 2px 8px rgba(0,0,0,.2);z-index:999;flex-shrink:0}
+#topbar h1{font-size:16px;font-weight:700}
+#topbar p{font-size:10px;opacity:.85;margin-top:2px}
+#mapContainer{flex:1;position:relative}
+#toolbar{position:absolute;top:60px;left:10px;z-index:1000;display:flex;gap:4px;background:rgba(255,255,255,.98);border-radius:8px;padding:6px;box-shadow:0 2px 12px rgba(0,0,0,.25)}
+#toolbar button{background:#3a7d35;color:#fff;border:none;padding:8px 14px;border-radius:6px;font-size:12px;cursor:pointer;font-weight:500}
+#toolbar button:hover{background:#2a5a1a}
+#toolbar button.active{background:#e65100}
+#sidePanel{position:absolute;top:60px;right:10px;z-index:1000;background:rgba(255,255,255,.98);border-radius:8px;padding:12px;box-shadow:0 2px 12px rgba(0,0,0,.25);max-width:320px;max-height:85vh;overflow-y:auto;font-size:12px}
+#sidePanel h3{font-size:14px;color:#2a5a1a;margin-bottom:8px}
+.route-segment{background:#fff;border-radius:6px;padding:8px;margin-bottom:6px;border-left:3px solid #e65100;font-size:11px}
+.route-segment h4{font-size:12px;color:#2a5a1a;margin-bottom:3px}
+.route-segment .info{color:#666;line-height:1.4}
+.amap-logo,.amap-copyright{display:none!important}
+</style>
+</head>
+<body>
+<div id="topbar">
+<h1>🚗 湘桂云贵环线·实际公路路线</h1>
+<p id="routeTitle">加载中...</p>
+</div>
+<div id="mapContainer">
+<div id="toolbar">
+<button onclick="setLayer('road')" id="btnRoad" class="active">🗺️ 标准地图</button>
+<button onclick="setLayer('sat')" id="btnSat">🛰️ 卫星地图</button>
+</div>
+<div id="sidePanel">
+<h3>📍 路线详情（实际公路）</h3>
+<div id="routeList"></div>
+<div style="margin-top:10px;padding-top:10px;border-top:1px solid #ddd;font-size:11px;color:#e65100">
+<b>⚠️ 注意：</b>这是高德API返回的实际公路路线，距离和时间仅供参考，实际驾驶请遵守交通规则。
+</div>
+</div>
+<div id="map" style="width:100%;height:100%"></div>
+</div>
+
+<script src="https://webapi.amap.com/maps?v=2.0&key=5f61cb82ade1cd5dec2d4e1aa1372918"></script>
+<script>
+var map;
+var layerGroup = [];
+var routeData = null;
+
+// 城市显示名映射
+var cityDisplayNames = {
+  '宁乡': '宁乡',
+  '南宁': '南宁',
+  '崇左': '崇左',
+  '百色': '百色',
+  '澄江县': '抚仙湖',
+  '景洪市': '西双版纳',
+  '昆明': '昆明',
+  '大理': '大理',
+  '丽江': '丽江',
+  '成都': '成都',
+  '重庆': '重庆'
+};
+
+function initMap() {
+  map = new AMap.Map("map", {
+    zoom: 6,
+    center: [105, 26],
+    viewMode: "2D",
+    mapStyle: "amap://styles/normal"
+  });
+
+  // 加载路线数据
+  fetch('route_data_v7.json')
+    .then(res => res.json())
+    .then(data => {
+      routeData = data;
+      drawRoutes(data);
+      updateUI(data);
+      map.setFitView();
+    })
+    .catch(err => {
+      console.error('加载路线数据失败:', err);
+      alert('加载路线数据失败，请确保route_data_v7.json文件存在！');
+    });
+}
+
+function drawRoutes(data) {
+  // 画每条路线
+  data.routes.forEach((route, idx) => {
+    if (route.polyline && route.polyline.length > 0) {
+      var polyline = new AMap.Polyline({
+        path: route.polyline,
+        strokeColor: '#e65100',
+        strokeWeight: 4,
+        strokeOpacity: 0.8,
+        lineJoin: 'round',
+        lineCap: 'round'
+      });
+      map.add(polyline);
+    }
+  });
+
+  // 标记城市
+  data.cities.forEach((city, idx) => {
+    var displayName = cityDisplayNames[city.name] || city.name;
+    var marker = new AMap.Marker({
+      position: [city.lng, city.lat],
+      title: displayName,
+      label: {
+        content: displayName,
+        direction: 'top',
+        offset: new AMap.Pixel(0, -5),
+        style: {fontSize:'11px',color:'#2a5a1a',background:'#fff',padding:'1px 4px',borderRadius:'3px'}
+      }
+    });
+    map.add(marker);
+  });
+}
+
+function updateUI(data) {
+  // 更新标题
+  var displayCities = data.cities.map(c => cityDisplayNames[c.name] || c.name);
+  var title = displayCities.join(' → ');
+  document.getElementById('routeTitle').innerText = title + ' | 共' + data.routes.length + '段 | 总距离:' + data.totalDistance + 'km';
+  
+  // 更新侧边栏
+  var routeListHtml = '';
+  data.routes.forEach((route, idx) => {
+    var fromName = cityDisplayNames[route.from] || route.from;
+    var toName = cityDisplayNames[route.to] || route.to;
+    var distance = route.distance ? route.distance + 'km' : '未知';
+    var time = route.time ? route.time + 'h' : '未知';
+    
+    routeListHtml += '<div class="route-segment">' +
+      '<h4>D' + (idx + 1) + ' ' + fromName + ' → ' + toName + '</h4>' +
+      '<div class="info">📏 距离：' + distance + '<br>⏱️ 时间：' + time + '</div>' +
+      '</div>';
+  });
+  
+  document.getElementById('routeList').innerHTML = routeListHtml;
+}
+
+function setLayer(type) {
+  layerGroup.forEach(function(l) { map.remove(l); });
+  layerGroup = [];
+  document.getElementById('btnRoad').className = '';
+  document.getElementById('btnSat').className = '';
+  
+  if (type === 'road') {
+    map.setMapStyle('amap://styles/normal');
+    document.getElementById('btnRoad').className = 'active';
+  } else if (type === 'sat') {
+    var satLayer = new AMap.TileLayer.Satellite();
+    var roadLayer = new AMap.TileLayer.RoadNet();
+    layerGroup = [satLayer, roadLayer];
+    layerGroup.forEach(function(l) { map.add(l); });
+    document.getElementById('btnSat').className = 'active';
+  }
+}
+
+// 初始化
+initMap();
+</script>
+</body>
+</html>
