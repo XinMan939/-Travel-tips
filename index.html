@@ -7,7 +7,8 @@
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;height:100vh;overflow:hidden;background:#1a1a2e}
-#mapContainer{width:100%;height:100%;position:relative}
+#mapContainer{width:100%;height:100%;position:relative;background:#1a1a2e}
+#map{width:100%;height:100%;position:absolute;top:0;left:0;z-index:1}
 
 /* 顶部标题栏 */
 #topbar{position:absolute;top:0;left:0;right:0;z-index:1000;background:linear-gradient(135deg,#0f3460,#16213e);padding:10px 16px;color:#fff;box-shadow:0 2px 12px rgba(0,0,0,.4)}
@@ -106,7 +107,7 @@ body{font-family:-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;height
   <div id="map" style="width:100%;height:100%"></div>
 </div>
 
-<script src="https://webapi.amap.com/maps?v=2.0&key=5f61cb82ade1cd5dec2d4e1aa1372918"></script>
+<script src="https://webapi.amap.com/maps?v=2.0&key=5f61cb82ade1cd5dec2d4e1aa1372918&plugin=AMap.Scale,AMap.ToolBar"></script>
 <script>
 var map, layerGroup = [], currentRoute = 'route1', currentCity = null;
 var allData, cityDetails, displayNames;
@@ -123,13 +124,48 @@ allData = {"displayNames":{"宁乡":"宁乡","南宁":"南宁","崇左":"崇左"
 displayNames = allData.displayNames;
 
 function initMap() {
-  map = new AMap.Map("map", {
-    zoom: 6,
-    center: [105, 26],
-    viewMode: "2D",
-    mapStyle: "amap://styles/normal"
-  });
-  switchRoute('route1');
+  // 确保DOM已加载且容器可见
+  var mapDiv = document.getElementById('map');
+  if (!mapDiv) {
+    console.error('Map container not found');
+    return;
+  }
+  
+  // 强制设置容器尺寸
+  mapDiv.style.width = '100%';
+  mapDiv.style.height = '100%';
+  
+  try {
+    map = new AMap.Map("map", {
+      zoom: 6,
+      center: [105, 26],
+      viewMode: "2D",
+      mapStyle: "amap://styles/normal",
+      resizeEnable: true
+    });
+    
+    // 添加控件
+    map.addControl(new AMap.Scale());
+    map.addControl(new AMap.ToolBar({
+      position: 'RB'
+    }));
+    
+    // 监听地图加载完成
+    map.on('complete', function() {
+      console.log('Map loaded successfully');
+      switchRoute('route1');
+    });
+    
+    // 如果complete事件没触发，延迟加载
+    setTimeout(function() {
+      if (!map) return;
+      switchRoute('route1');
+    }, 1000);
+    
+  } catch (e) {
+    console.error('Map init error:', e);
+    mapDiv.innerHTML = '<div style="padding:50px;text-align:center;color:#fff">地图加载失败，请刷新重试<br>错误: ' + e.message + '</div>';
+  }
 }
 
 function switchRoute(routeId) {
@@ -358,7 +394,16 @@ function setLayer(type) {
   }
 }
 
-initMap();
+// DOM加载完成后初始化
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initMap);
+} else {
+  // DOM ready后初始化
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initMap);
+} else {
+  initMap();
+}
 </script>
 </body>
 </html>
