@@ -35,8 +35,8 @@ body{font-family:-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;height
 #detailsHeader .stats{font-size:10px;opacity:.85}
 
 /* 城市标签 */
-#cityTabs{display:flex;overflow-x:auto;padding:8px 10px;gap:5px;flex-shrink:0;border-bottom:1px solid #eee;background:#fafafa}
-.city-tab{flex-shrink:0;padding:5px 11px;border-radius:15px;font-size:11px;cursor:pointer;background:#e8e8e8;color:#333;transition:all .2s;border:1px solid transparent}
+#cityTabs{display:flex;flex-wrap:wrap;padding:8px 10px;gap:5px;flex-shrink:0;border-bottom:1px solid #eee;background:#fafafa}
+.city-tab{padding:5px 11px;border-radius:15px;font-size:11px;cursor:pointer;background:#e8e8e8;color:#333;transition:all .2s;border:1px solid transparent}
 .city-tab:hover{background:#ddd}
 .city-tab.active{background:#e94560;color:#fff;font-weight:600}
 
@@ -261,11 +261,17 @@ function drawRoutes(data) {
     var marker = new AMap.Marker({
       position: [city.lng, city.lat],
       title: dn,
+      icon: new AMap.Icon({
+        size: new AMap.Size(24, 32),
+        imageSize: new AMap.Size(24, 32),
+        image: 'data:image/svg+xml;base64,' + Buffer.from('<svg xmlns="http://www.w3.org/2000/svg" width="24" height="32" viewBox="0 0 24 32"><path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 20 12 20s12-11 12-20C24 5.37 18.63 0 12 0z" fill="#e94560"/><circle cx="12" cy="12" r="6" fill="#fff"/></svg>').toString('base64')
+      }),
+      offset: new AMap.Pixel(-12, -32),
       label: {
         content: '<b>' + dn + '</b>',
         direction: 'top',
-        offset: new AMap.Pixel(0, -5),
-        style: {fontSize:'12px',color:'#0f3460',background:'rgba(255,255,255,.9)',padding:'2px 6px',borderRadius:'4px',fontWeight:'700',border:'1px solid #e94560'}
+        offset: new AMap.Pixel(0, -8),
+        style: {fontSize:'12px',color:'#0f3460',background:'rgba(255,255,255,.95)',padding:'2px 7px',borderRadius:'4px',fontWeight:'700',border:'1px solid #e94560',boxShadow:'0 1px 3px rgba(0,0,0,.2)'}
       }
     });
     
