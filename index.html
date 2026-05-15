@@ -181,7 +181,7 @@ function switchRoute(routeId) {
   var cityNames = data.cities.map(function(c) { return displayNames[c.name] || c.name; });
   document.getElementById('routeInfo').textContent = cityNames.join(' → ') + ' | ' + data.totalDistance + 'km';
   document.getElementById('panelTitle').textContent = data.name;
-  document.getElementById('panelStats').textContent = '总距离: ' + data.totalDistance + 'km | ' + data.routes.length + '段路线';
+  document.getElementById('panelStats').textContent = '总距离: ' + data.totalDistance + 'km | ' + Object.keys(data.routes).length + '段路线';
   
   updateCityTabs(data);
   document.getElementById('cityDetail').innerHTML = '<div style="text-align:center;color:#999;padding:35px 18px;font-size:13px">👆 点击上方城市查看详细攻略<br><br><span style="font-size:11px">包含：必去景点、美食推荐、<br>住宿建议、天气穿衣、拍照攻略</span></div>';
@@ -295,8 +295,35 @@ function drawRoutes(data) {
   midMarkers.forEach(function(m) { map.remove(m); });
   polylines = []; markers = []; midMarkers = [];
   
-  data.routes.forEach(function(route, idx) {
-    if (route.polyline && route.polyline.length > 0) {
+  Object.values(data.routes).forEach(function(route, rIdx) {
+    if (route.routes && route.routes.length > 0) {
+      route.routes.forEach(function(seg, idx) {
+        if (!seg.polyline || seg.polyline.length === 0) return;
+        var color = COLORS[(rIdx * route.routes.length + idx) % COLORS.length];
+        var polyline = new AMap.Polyline({
+          path: seg.polyline,
+          strokeColor: color,
+          strokeWeight: 4,
+          strokeOpacity: 0.85,
+          lineJoin: 'round',
+          lineCap: 'round'
+        });
+        map.add(polyline);
+        polylines.push(polyline);
+        
+        if (seg.distance) {
+          var midIdx = Math.floor(seg.polyline.length / 2);
+          var midPoint = seg.polyline[midIdx];
+          var midMarker = new AMap.Marker({
+            position: midPoint,
+            content: '<div style="background:' + color + ';color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;white-space:nowrap;border:1px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)">' + seg.distance + 'km | ' + seg.time + 'h</div>',
+            offset: new AMap.Pixel(-30, -8),
+            anchor: 'center'
+          });
+          map.add(midMarker);
+          midMarkers.push(midMarker);
+        }
+      });
       var color = COLORS[idx % COLORS.length];
       var polyline = new AMap.Polyline({
         path: route.polyline,
