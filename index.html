@@ -185,7 +185,7 @@ function switchRoute(routeKey) {
   drawRoutes(d);
   
   // Update active button state
-  document.querySelectorAll('.route-btn').forEach(function(btn) {
+  document.querySelectorAll('#routeSelector button').forEach(function(btn) {
     btn.classList.remove('active');
     if (btn.getAttribute('data-route') === routeKey) btn.classList.add('active');
   });
@@ -330,7 +330,7 @@ function drawRoutes(data) {
       var mkr = new AMap.Marker({
         position: [path[midIdx][0], path[midIdx][1]],
         content: '<div style="background:rgba(255,255,255,0.92);padding:3px 10px;border-radius:12px;font-size:12px;font-weight:bold;color:#333;border:1px solid #ddd;white-space:nowrap;box-shadow:0 1px 4px rgba(0,0,0,0.15);">' + 
-                 seg.distance + ' | ' + (seg.time||'') + '</div>',
+                 seg.distance + 'km | ' + (seg.time||'') + '</div>',
         offset: new AMap.Pixel(-40, -15),
         zIndex: 60
       });
@@ -359,6 +359,7 @@ function drawRoutes(data) {
       
       mk.setMap(map);
       cityMarkers.push(mk);
+      AMap.Event.addListener(mk, 'click', function() { selectCity(ci.name); });
     });
   }
 
