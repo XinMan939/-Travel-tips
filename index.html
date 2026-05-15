@@ -306,8 +306,8 @@ function drawRoutes(data) {
         strokeColor: color,
         strokeWeight: 4,
         strokeOpacity: 0.85,
-        lineJoin: "round",
-        lineCap: "round"
+        lineJoin: 'round',
+        lineCap: 'round'
       });
       map.add(polyline);
       polylines.push(polyline);
@@ -319,7 +319,7 @@ function drawRoutes(data) {
           position: midPoint,
           content: '<div style="background:' + color + ';color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;white-space:nowrap;border:1px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.3)">' + seg.distance + 'km | ' + seg.time + 'h</div>',
           offset: new AMap.Pixel(-30, -8),
-          anchor: "center"
+          anchor: 'center'
         });
         map.add(midMarker);
         midMarkers.push(midMarker);
