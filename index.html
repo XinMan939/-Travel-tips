@@ -237,7 +237,7 @@ function selectCity(cityName) {
       if (hasDetail) {
         html += '<li class="clickable-attraction" onclick="showAttractionDetail(\''+cityName+'\', \''+attrName+'\')">' + s + ' \u203A</li>';
       } else {
-        html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s + '\')">' + s + '</li>';
+        html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s.replace(/'/g,"\\'") + '\')">' + s + '</li>';
       }
     });
     html += '</ul></div>';
@@ -250,7 +250,7 @@ function selectCity(cityName) {
       if (hasDetail2) {
         html += '<li class="clickable-attraction" onclick="showAttractionDetail(\''+cityName+'\', \''+attrName2+'\')">' + s + ' \u203A</li>';
       } else {
-        html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s + '\')">' + s + '</li>';
+        html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s.replace(/'/g,"\\'") + '\')">' + s + '</li>';
       }
     });
     html += '</ul></div>';
@@ -263,7 +263,7 @@ function selectCity(cityName) {
       if (matchedShop) {
         html += '<li class="clickable-food" onclick="showFoodShopDetail(\''+cityName+'\', \''+matchedShop.name+'\')">' + s + ' \uD83C\uDFEA</li>';
       } else {
-        html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s + '\')">' + s + '</li>';
+        html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s.replace(/'/g,"\\'") + '\')">' + s + '</li>';
       }
     });
     html += '</ul></div>';
@@ -281,7 +281,7 @@ function selectCity(cityName) {
   }
   if (detail.breakfast && detail.breakfast.length) {
     html += '<div class="detail-section"><h4>\uD83C\uDF05 早餐推荐</h4><ul>';
-    detail.breakfast.forEach(function(s) { html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s + '\')">' + s + '</li>'; });
+    detail.breakfast.forEach(function(s) { html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s.replace(/'/g,"\\'") + '\')">' + s + '</li>'; });
     html += '</ul></div>';
   }
   html += '<div class="detail-section"><h4>\uD83C\uDFE8 住宿</h4><div style="font-size:11px;color:#333;line-height:1.8"><div>\uD83D\uDCCD ' + detail.stay + '</div><div>\uD83D\uDCB0 ' + detail.hotelPrice + '</div></div></div>';
@@ -289,12 +289,12 @@ function selectCity(cityName) {
   html += '<div class="detail-section"><h4>\uD83C\uDF24\uFE0F 天气&穿衣</h4><div style="font-size:11px;color:#333;line-height:1.8"><div>' + detail.weather + '</div><div>\uD83D\uDC54 ' + detail.clothes + '</div></div></div>';
   if (detail.photo && detail.photo.length) {
     html += '<div class="detail-section"><h4>\uD83D\uDCF8 出片地点</h4><ul>';
-    detail.photo.forEach(function(s) { html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s + '\')">' + s + '</li>'; });
+    detail.photo.forEach(function(s) { html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s.replace(/'/g,"\\'") + '\')">' + s + '</li>'; });
     html += '</ul></div>';
   }
   if (detail.tips && detail.tips.length) {
     html += '<div class="detail-section"><h4>\u26A0\uFE0F 注意事项</h4><ul>';
-    detail.tips.forEach(function(s) { html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s + '\')">' + s + '</li>'; });
+    detail.tips.forEach(function(s) { html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s.replace(/'/g,"\\'") + '\')">' + s + '</li>'; });
     html += '</ul></div>';
   }
   if (detail.advanceTicket && detail.advanceTicket.length) {
