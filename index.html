@@ -100,6 +100,10 @@ body{font-family:-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;height
 .clickable-attraction:hover{color:#c0392b}
 .clickable-food{cursor:pointer;color:#27ae60;text-decoration:underline;text-decoration-style:dotted;transition:color .2s}
 .clickable-food:hover{color:#1e8449}
+
+.food-item { cursor: pointer; color: #2d6a4f; }
+.food-item:hover { color: #1e8449; text-decoration: underline; }
+
 </style>
 </head>
 <body>
@@ -142,9 +146,20 @@ body{font-family:-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;height
 </div>
 
 <script src="https://webapi.amap.com/maps?v=2.0&key=5f61cb82ade1cd5dec2d4e1aa1372918">
-window.addEventListener("load", function() {
-  if (typeof initMap === "function") initMap();
-});
+function showFoodDetail(cityName, foodName) {
+  var detail = allData.cityDetails[cityName];
+  if (!detail || !detail.foodDetails) return;
+  var fd = detail.foodDetails.find(function(f) { return f.name === foodName; });
+  if (!fd) { alert('暂无详情: ' + foodName); return; }
+  var h = '<h3>' + foodName + '</h3>';
+  h += '<p><b>推荐店铺:</b> ' + (fd.shop || '暂无') + '</p>';
+  h += '<p><b>地址:</b> ' + (fd.address || '暂无') + '</p>';
+  h += '<p><b>特色:</b> ' + (fd.desc || '暂无') + '</p>';
+  if (fd.price) h += '<p><b>价格:</b> ' + fd.price + '</p>';
+  document.getElementById('detailContent').innerHTML = h;
+  document.getElementById('detailPopup').style.display = 'block';
+}
+
 </script>
 <script>
 var map, layerGroup = [], currentRoute = 'route1', currentCity = null;
@@ -220,7 +235,7 @@ function selectCity(cityName) {
       if (hasDetail) {
         html += '<li class="clickable-attraction" onclick="showAttractionDetail(\''+cityName+'\', \''+attrName.replace(/'/g,"\\'")+'\')">' + s + ' \u203A</li>';
       } else {
-        html += '<li>' + s + '</li>';
+        html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s + '\')">' + s + '</li>';
       }
     });
     html += '</ul></div>';
@@ -233,7 +248,7 @@ function selectCity(cityName) {
       if (hasDetail2) {
         html += '<li class="clickable-attraction" onclick="showAttractionDetail(\''+cityName+'\', \''+attrName2.replace(/'/g,"\\'")+'\')">' + s + ' \u203A</li>';
       } else {
-        html += '<li>' + s + '</li>';
+        html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s + '\')">' + s + '</li>';
       }
     });
     html += '</ul></div>';
@@ -246,7 +261,7 @@ function selectCity(cityName) {
       if (matchedShop) {
         html += '<li class="clickable-food" onclick="showFoodShopDetail(\''+cityName+'\', \''+matchedShop.name.replace(/'/g,"\\'")+'\')">' + s + ' \uD83C\uDFEA</li>';
       } else {
-        html += '<li>' + s + '</li>';
+        html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s + '\')">' + s + '</li>';
       }
     });
     html += '</ul></div>';
@@ -264,7 +279,7 @@ function selectCity(cityName) {
   }
   if (detail.breakfast && detail.breakfast.length) {
     html += '<div class="detail-section"><h4>\uD83C\uDF05 早餐推荐</h4><ul>';
-    detail.breakfast.forEach(function(s) { html += '<li>' + s + '</li>'; });
+    detail.breakfast.forEach(function(s) { html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s + '\')">' + s + '</li>'; });
     html += '</ul></div>';
   }
   html += '<div class="detail-section"><h4>\uD83C\uDFE8 住宿</h4><div style="font-size:11px;color:#333;line-height:1.8"><div>\uD83D\uDCCD ' + detail.stay + '</div><div>\uD83D\uDCB0 ' + detail.hotelPrice + '</div></div></div>';
@@ -272,12 +287,12 @@ function selectCity(cityName) {
   html += '<div class="detail-section"><h4>\uD83C\uDF24\uFE0F 天气&穿衣</h4><div style="font-size:11px;color:#333;line-height:1.8"><div>' + detail.weather + '</div><div>\uD83D\uDC54 ' + detail.clothes + '</div></div></div>';
   if (detail.photo && detail.photo.length) {
     html += '<div class="detail-section"><h4>\uD83D\uDCF8 出片地点</h4><ul>';
-    detail.photo.forEach(function(s) { html += '<li>' + s + '</li>'; });
+    detail.photo.forEach(function(s) { html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s + '\')">' + s + '</li>'; });
     html += '</ul></div>';
   }
   if (detail.tips && detail.tips.length) {
     html += '<div class="detail-section"><h4>\u26A0\uFE0F 注意事项</h4><ul>';
-    detail.tips.forEach(function(s) { html += '<li>' + s + '</li>'; });
+    detail.tips.forEach(function(s) { html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s + '\')">' + s + '</li>'; });
     html += '</ul></div>';
   }
   if (detail.advanceTicket && detail.advanceTicket.length) {
