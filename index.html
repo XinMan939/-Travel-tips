@@ -352,7 +352,7 @@ function drawRoutes(data) {
       
       mk.setMap(map);
       cityMarkers.push(mk);
-      AMap.Event.addListener(mk, 'click', function() { selectCity(ci.name); });
+      AMap.Event.addListener(mk, 'click', function() { selectCity(displayNames[ci.name] || ci.name); });
     });
   }
 
