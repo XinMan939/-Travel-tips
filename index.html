@@ -235,7 +235,7 @@ function selectCity(cityName) {
       var attrName = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
       var hasDetail = detail.attractions && detail.attractions.some(function(a) { return a.name === attrName; });
       if (hasDetail) {
-        html += '<li class="clickable-attraction" onclick="showAttractionDetail(\''+cityName+'\', \''+attrName.replace(/'/g,"\\'")+'\')">' + s + ' \u203A</li>';
+        html += '<li class="clickable-attraction" onclick="showAttractionDetail(\''+cityName+'\', \''+attrName+'\')">' + s + ' \u203A</li>';
       } else {
         html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s + '\')">' + s + '</li>';
       }
@@ -248,7 +248,7 @@ function selectCity(cityName) {
       var attrName2 = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
       var hasDetail2 = detail.attractions && detail.attractions.some(function(a) { return a.name === attrName2; });
       if (hasDetail2) {
-        html += '<li class="clickable-attraction" onclick="showAttractionDetail(\''+cityName+'\', \''+attrName2.replace(/'/g,"\\'")+'\')">' + s + ' \u203A</li>';
+        html += '<li class="clickable-attraction" onclick="showAttractionDetail(\''+cityName+'\', \''+attrName2+'\')">' + s + ' \u203A</li>';
       } else {
         html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s + '\')">' + s + '</li>';
       }
@@ -261,7 +261,7 @@ function selectCity(cityName) {
       var foodName = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
       var matchedShop = detail.foodShops ? detail.foodShops.find(function(sh) { return sh.specialty.indexOf(foodName) >= 0 || sh.mustOrder.join(',').indexOf(foodName) >= 0; }) : null;
       if (matchedShop) {
-        html += '<li class="clickable-food" onclick="showFoodShopDetail(\''+cityName+'\', \''+matchedShop.name.replace(/'/g,"\\'")+'\')">' + s + ' \uD83C\uDFEA</li>';
+        html += '<li class="clickable-food" onclick="showFoodShopDetail(\''+cityName+'\', \''+matchedShop.name+'\')">' + s + ' \uD83C\uDFEA</li>';
       } else {
         html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s + '\')">' + s + '</li>';
       }
