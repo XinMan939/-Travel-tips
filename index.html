@@ -147,6 +147,7 @@ body{font-family:-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;height
 
 <script src="https://webapi.amap.com/maps?v=2.0&key=5f61cb82ade1cd5dec2d4e1aa1372918">
 function showFoodDetail(cityName, foodName) {
+  console.log("showFoodDetail called:", cityName, foodName);
   var detail = allData.cityDetails[cityName];
   if (!detail || !detail.foodDetails) return;
   var fd = detail.foodDetails.find(function(f) { return f.name === foodName; });
@@ -216,6 +217,7 @@ function updateCityTabs(data) {
 }
 
 function selectCity(cityName) {
+  console.log("selectCity called:", cityName);
   currentCity = cityName;
   document.querySelectorAll('.city-tab').forEach(function(el) {
     el.className = el.getAttribute('data-city') === cityName ? 'city-tab active' : 'city-tab';
