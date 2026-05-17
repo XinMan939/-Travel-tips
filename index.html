@@ -142,7 +142,7 @@ body{font-family:-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;height
 </div>
 
 <script src="https://webapi.amap.com/maps?v=2.0&key=5f61cb82ade1cd5dec2d4e1aa1372918"></script>
-<script>if(window.AMap){initMap()}else{document.querySelector('script[src*=amap]').onload=initMap}</script>
+
 <script>
 var map, layerGroup = [], currentRoute = 'route1', currentCity = null;
 var allData, cityDetails, displayNames;
@@ -2895,7 +2895,14 @@ function setLayer(type) {
   }
 }
 
-initMap();
+// Wait for AMap to be ready before initializing map
+(function waitForAMap() {
+  if (window.AMap && typeof AMap.Map === 'function') {
+    initMap();
+  } else {
+    setTimeout(waitForAMap, 100);
+  }
+})();
 
 // 景点/美食详情弹窗
 
