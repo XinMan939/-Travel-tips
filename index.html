@@ -100,10 +100,6 @@ body{font-family:-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;height
 .clickable-attraction:hover{color:#c0392b}
 .clickable-food{cursor:pointer;color:#27ae60;text-decoration:underline;text-decoration-style:dotted;transition:color .2s}
 .clickable-food:hover{color:#1e8449}
-
-.food-item { cursor: pointer; color: #2d6a4f; }
-.food-item:hover { color: #1e8449; text-decoration: underline; }
-
 </style>
 </head>
 <body>
@@ -132,15 +128,7 @@ body{font-family:-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;height
       <h2 id="panelTitle">路线详情</h2>
       <div class="stats" id="panelStats"></div>
     </div>
-    <div id="routeSelector">
-  <button data-route="1" onclick="switchRoute(1)">路线1: 广西+版纳</button>
-  <button data-route="2" onclick="switchRoute(2)">路线2: 贵州+版纳</button>
-  <button data-route="3" onclick="switchRoute(3)">路线3: 千户苗寨+荔波</button>
-  <button data-route="4" onclick="switchRoute(4)">路线4: 千户苗寨+黄果树</button>
-  <button data-route="5" onclick="switchRoute(5)">路线5: 抚仙湖+版纳</button>
-  <button data-route="6" onclick="switchRoute(6)">路线6: 全程（含抚仙湖+版纳）</button>
-</div>
-<div id="cityTabs" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
+    <div id="cityTabs" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
     <div id="cityDetail">
       <div style="text-align:center;color:#999;padding:35px 18px;font-size:13px">
         👆 点击上方城市查看详细攻略<br><br>
@@ -154,37 +142,6 @@ body{font-family:-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;height
 </div>
 
 <script src="https://webapi.amap.com/maps?v=2.0&key=5f61cb82ade1cd5dec2d4e1aa1372918">
-function showFoodDetail(cityName, foodName) {
-  console.log("showFoodDetail called:", cityName, foodName);
-  var detail = allData.cityDetails[cityName];
-  if (!detail || !detail.foodDetails) return;
-  var fd = detail.foodDetails.find(function(f) { return f.name === foodName; });
-  if (!fd) { alert('暂无详情: ' + foodName); return; }
-  var h = '<h3>' + foodName + '</h3>';
-  h += '<p><b>推荐店铺:</b> ' + (fd.shop || '暂无') + '</p>';
-  h += '<p><b>地址:</b> ' + (fd.address || '暂无') + '</p>';
-  h += '<p><b>特色:</b> ' + (fd.desc || '暂无') + '</p>';
-  if (fd.price) h += '<p><b>价格:</b> ' + fd.price + '</p>';
-  document.getElementById('detailContent').innerHTML = h;
-  document.getElementById('detailPopup').style.display = 'block';
-}
-
-
-document.addEventListener('DOMContentLoaded', function() {
-  var detailDiv = document.getElementById('cityDetail');
-  if (detailDiv) {
-    detailDiv.addEventListener('click', function(e) {
-      var li = e.target.closest('li');
-      if (!li || !li.dataset.type) return;
-      var type = li.dataset.type;
-      var city = li.dataset.city;
-      var name = li.dataset.name.replace(/&quot;/g, '"');
-      if (type === 'attraction') showAttractionDetail(city, name);
-      else if (type === 'food') showFoodDetail(city, name);
-    });
-  }
-});
-
 var routeCities = {
   1: ["崇左", "百色", "贵阳", "昆明", "大理", "丽江", "西双版纳"],
   2: ["崇左", "百色", "昆明", "大理", "丽江", "西双版纳"],
@@ -193,6 +150,7 @@ var routeCities = {
   5: ["崇左", "百色", "抚仙湖", "昆明", "大理", "丽江", "西双版纳"],
   6: ["崇左", "千户苗寨", "荔波/黄果树", "贵阳", "抚仙湖", "昆明", "大理", "丽江", "西双版纳"]
 };
+
 </script>
 <script>
 var map, layerGroup = [], currentRoute = 'route1', currentCity = null;
@@ -253,59 +211,91 @@ function selectCity(cityName) {
   document.querySelectorAll('.city-tab').forEach(function(el) {
     el.className = el.getAttribute('data-city') === cityName ? 'city-tab active' : 'city-tab';
   });
-  var detail = allData.cityDetails[cityName];
+  var detail = cityDetails[cityName];
   if (!detail) {
     document.getElementById('cityDetail').innerHTML = '<p style="color:#999;text-align:center;padding:20px">暂无详细信息</p>';
     return;
   }
-  var dn = allData.displayNames[cityName] || cityName;
+  var dn = displayNames[cityName] || cityName;
   var html = '<h3>' + dn + '</h3><div class="desc">' + detail.desc + ' | ' + detail.days + '</div>';
-  
   if (detail.mustVisit && detail.mustVisit.length) {
-    html += '<div class="detail-section"><h4>?? 必去景点</h4><ul>';
+    html += '<div class="detail-section"><h4>\uD83D\uDD34 必去景点</h4><ul>';
     detail.mustVisit.forEach(function(s) {
       var attrName = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
       var hasDetail = detail.attractions && detail.attractions.some(function(a) { return a.name === attrName; });
       if (hasDetail) {
-        html += '<li class="clickable-attraction" data-type="attraction" data-city="' + cityName + '" data-name="' + attrName.replace(/"/g, '&quot;') + '">' + s + ' ›</li>';
+        html += '<li class="clickable-attraction" onclick="showAttractionDetail(\''+cityName+'\', \''+attrName.replace(/'/g,"\\'")+'\')">' + s + ' \u203A</li>';
       } else {
         html += '<li>' + s + '</li>';
       }
     });
     html += '</ul></div>';
   }
-  
   if (detail.optional && detail.optional.length) {
-    html += '<div class="detail-section"><h4>⚪ 可选景点</h4><ul>';
+    html += '<div class="detail-section"><h4>\u26AA 可选景点</h4><ul>';
     detail.optional.forEach(function(s) {
       var attrName2 = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
       var hasDetail2 = detail.attractions && detail.attractions.some(function(a) { return a.name === attrName2; });
       if (hasDetail2) {
-        html += '<li class="clickable-attraction" data-type="attraction" data-city="' + cityName + '" data-name="' + attrName2.replace(/"/g, '&quot;') + '">' + s + ' ›</li>';
+        html += '<li class="clickable-attraction" onclick="showAttractionDetail(\''+cityName+'\', \''+attrName2.replace(/'/g,"\\'")+'\')">' + s + ' \u203A</li>';
       } else {
         html += '<li>' + s + '</li>';
       }
     });
     html += '</ul></div>';
   }
-  
   if (detail.food && detail.food.length) {
-    html += '<div class="detail-section"><h4>?? 美食推荐</h4><ul>';
+    html += '<div class="detail-section"><h4>\uD83C\uDF5C 美食推荐</h4><ul>';
     detail.food.forEach(function(s) {
       var foodName = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
-      html += '<li class="food-item" data-type="food" data-city="' + cityName + '" data-name="' + foodName.replace(/"/g, '&quot;') + '">' + s + '</li>';
+      var matchedShop = detail.foodShops ? detail.foodShops.find(function(sh) { return sh.specialty.indexOf(foodName) >= 0 || sh.mustOrder.join(',').indexOf(foodName) >= 0; }) : null;
+      if (matchedShop) {
+        html += '<li class="clickable-food" onclick="showFoodShopDetail(\''+cityName+'\', \''+matchedShop.name.replace(/'/g,"\\'")+'\')">' + s + ' \uD83C\uDFEA</li>';
+      } else {
+        html += '<li>' + s + '</li>';
+      }
     });
     html += '</ul></div>';
   }
-  
+  if (detail.foodShops && detail.foodShops.length) {
+    html += '<div class="detail-section"><h4>\uD83C\uDFEA 推荐店铺</h4>';
+    detail.foodShops.forEach(function(shop) {
+      html += '<div class="food-shop-card" onclick="showFoodShopDetail(\''+cityName+'\', \''+shop.name.replace(/'/g,"\\'")+'\')">';
+      html += '<div class="food-shop-name">' + shop.name + ' \u203A</div>';
+      html += '<div class="food-shop-specialty">' + shop.specialty + '</div>';
+      html += '<div class="food-shop-info"><span class="food-shop-price">' + shop.price + '</span><span>' + shop.address + '</span></div>';
+      html += '</div>';
+    });
+    html += '</div>';
+  }
+  if (detail.breakfast && detail.breakfast.length) {
+    html += '<div class="detail-section"><h4>\uD83C\uDF05 早餐推荐</h4><ul>';
+    detail.breakfast.forEach(function(s) { html += '<li>' + s + '</li>'; });
+    html += '</ul></div>';
+  }
+  html += '<div class="detail-section"><h4>\uD83C\uDFE8 住宿</h4><div style="font-size:11px;color:#333;line-height:1.8"><div>\uD83D\uDCCD ' + detail.stay + '</div><div>\uD83D\uDCB0 ' + detail.hotelPrice + '</div></div></div>';
+  html += '<div class="detail-section"><h4>\uD83D\uDCB0 消费参考</h4><div style="font-size:11px;color:#333;line-height:1.8"><div>\uD83C\uDF7D\uFE0F 餐饮：' + detail.mealPrice + '</div></div></div>';
+  html += '<div class="detail-section"><h4>\uD83C\uDF24\uFE0F 天气&穿衣</h4><div style="font-size:11px;color:#333;line-height:1.8"><div>' + detail.weather + '</div><div>\uD83D\uDC54 ' + detail.clothes + '</div></div></div>';
+  if (detail.photo && detail.photo.length) {
+    html += '<div class="detail-section"><h4>\uD83D\uDCF8 出片地点</h4><ul>';
+    detail.photo.forEach(function(s) { html += '<li>' + s + '</li>'; });
+    html += '</ul></div>';
+  }
+  if (detail.tips && detail.tips.length) {
+    html += '<div class="detail-section"><h4>\u26A0\uFE0F 注意事项</h4><ul>';
+    detail.tips.forEach(function(s) { html += '<li>' + s + '</li>'; });
+    html += '</ul></div>';
+  }
+  if (detail.advanceTicket && detail.advanceTicket.length) {
+    html += '<div class="detail-section"><h4>\uD83C\uDFAB 提前预订</h4><ul>';
+    detail.advanceTicket.forEach(function(s) { html += '<li class="highlight">' + s + '</li>'; });
+    html += '</ul></div>';
+  }
   document.getElementById('cityDetail').innerHTML = html;
-  document.getElementById('cityTitle').textContent = dn;
-
-  var bars = document.querySelectorAll('#cityBars .bar');
-  bars.forEach(function(b) { b.className = 'bar'; });
-  var cityIdx = routeCities[currentRoute].indexOf(cityName);
-  if (cityIdx >= 0 && cityIdx < bars.length) bars[cityIdx].className = 'bar active';
+  document.getElementById('cityDetail').scrollTop = 0;
 }
+
+
 function drawRoutes(data) {
   // Clear existing polylines
   polylines.forEach(function(p) { map.remove(p); });
