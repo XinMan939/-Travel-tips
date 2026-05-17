@@ -176,6 +176,15 @@ document.addEventListener('DOMContentLoaded', function() {
     });
   }
 });
+
+var routeCities = {
+  1: ["崇左", "百色", "贵阳", "昆明", "大理", "丽江", "西双版纳"],
+  2: ["崇左", "百色", "昆明", "大理", "丽江", "西双版纳"],
+  3: ["崇左", "千户苗寨", "荔波", "贵阳", "昆明", "大理", "丽江"],
+  4: ["崇左", "千户苗寨", "黄果树", "贵阳", "昆明", "大理", "丽江"],
+  5: ["崇左", "百色", "抚仙湖", "昆明", "大理", "丽江", "西双版纳"],
+  6: ["崇左", "千户苗寨", "荔波/黄果树", "贵阳", "抚仙湖", "昆明", "大理", "丽江", "西双版纳"]
+};
 </script>
 <script>
 var map, layerGroup = [], currentRoute = 'route1', currentCity = null;
@@ -283,6 +292,11 @@ function selectCity(cityName) {
   
   document.getElementById('cityDetail').innerHTML = html;
   document.getElementById('cityTitle').textContent = dn;
+
+  var bars = document.querySelectorAll('#cityBars .bar');
+  bars.forEach(function(b) { b.className = 'bar'; });
+  var cityIdx = routeCities[currentRoute].indexOf(cityName);
+  if (cityIdx >= 0 && cityIdx < bars.length) bars[cityIdx].className = 'bar active';
 }
 function drawRoutes(data) {
   // Clear existing polylines
