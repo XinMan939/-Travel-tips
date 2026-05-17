@@ -2998,6 +2998,20 @@ function showFoodShopDetail(cityName, shopName) {
 function closePopup() { document.getElementById('detailPopup').classList.remove('active'); }
 document.addEventListener('click', function(e) { if (e.target.id === 'detailPopup') closePopup(); });
 document.addEventListener('keydown', function(e) { if (e.key === 'Escape') closePopup(); });
+
+// Fix: ensure map initializes on page load
+window.addEventListener("load", function() {
+  console.log("Window loaded, calling initMap...");
+  if (typeof initMap === "function") {
+    initMap();
+  } else {
+    console.error("initMap not defined yet, retrying in 500ms");
+    setTimeout(function() {
+      if (typeof initMap === "function") initMap();
+      else console.error("initMap still not available");
+    }, 500);
+  }
+});
 </script>
 
 <!-- 景点/美食详情弹窗 -->
