@@ -211,7 +211,7 @@ function selectCity(cityName) {
     html += '<div class="detail-section"><h4>\uD83D\uDD34 必去景点</h4><ul>';
     detail.mustVisit.forEach(function(s) {
       var attrName = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
-      var hasDetail = detail.attractions && detail.attractions.some(function(a) { return a.name === attrName; });
+      var hasDetail = detail.attractions && detail.attractions.some(function(a) { var cn=a.name.replace(/\s*[（(].+?[)）]\s*/g,'').trim();var an=attrName.replace(/\s*[（(].+?[)）]\s*/g,'').trim();return cn===an||a.name===attrName||cn===attrName||a.name===an; });
       if (hasDetail) {
         html += '<li class="clickable-attraction" onclick="showAttractionDetail(\''+cityName+'\', \''+attrName.replace(/'/g,"\\'")+'\')">' + s + ' \u203A</li>';
       } else {
@@ -387,7 +387,7 @@ function showAttractionDetail(cityName, attrName) {
   if (!city || !city.attractions) return;
   var attr = null;
   for (var i = 0; i < city.attractions.length; i++) {
-    if (city.attractions[i].name === attrName) { attr = city.attractions[i]; break; }
+    var cn = city.attractions[i].name.replace(/\s*[（(].+?[)）]\s*/g,'').trim(); var an = attrName.replace(/\s*[（(].+?[)）]\s*/g,'').trim(); if (cn === an || city.attractions[i].name === attrName || cn === attrName || city.attractions[i].name === an) { attr = city.attractions[i]; break; }
   }
   if (!attr) return;
 
