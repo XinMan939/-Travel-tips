@@ -132,7 +132,15 @@ body{font-family:-apple-system,"Microsoft YaHei","PingFang SC",sans-serif;height
       <h2 id="panelTitle">路线详情</h2>
       <div class="stats" id="panelStats"></div>
     </div>
-    <div id="cityTabs" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
+    <div id="routeSelector">
+  <button data-route="1" onclick="switchRoute(1)">路线1: 广西+版纳</button>
+  <button data-route="2" onclick="switchRoute(2)">路线2: 贵州+版纳</button>
+  <button data-route="3" onclick="switchRoute(3)">路线3: 千户苗寨+荔波</button>
+  <button data-route="4" onclick="switchRoute(4)">路线4: 千户苗寨+黄果树</button>
+  <button data-route="5" onclick="switchRoute(5)">路线5: 抚仙湖+版纳</button>
+  <button data-route="6" onclick="switchRoute(6)">路线6: 全程（含抚仙湖+版纳）</button>
+</div>
+<div id="cityTabs" style="display:flex;flex-wrap:wrap;gap:4px;"></div>
     <div id="cityDetail">
       <div style="text-align:center;color:#999;padding:35px 18px;font-size:13px">
         👆 点击上方城市查看详细攻略<br><br>
