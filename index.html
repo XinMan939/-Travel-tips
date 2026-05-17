@@ -161,6 +161,21 @@ function showFoodDetail(cityName, foodName) {
   document.getElementById('detailPopup').style.display = 'block';
 }
 
+
+document.addEventListener('DOMContentLoaded', function() {
+  var detailDiv = document.getElementById('cityDetail');
+  if (detailDiv) {
+    detailDiv.addEventListener('click', function(e) {
+      var li = e.target.closest('li');
+      if (!li || !li.dataset.type) return;
+      var type = li.dataset.type;
+      var city = li.dataset.city;
+      var name = li.dataset.name.replace(/&quot;/g, '"');
+      if (type === 'attraction') showAttractionDetail(city, name);
+      else if (type === 'food') showFoodDetail(city, name);
+    });
+  }
+});
 </script>
 <script>
 var map, layerGroup = [], currentRoute = 'route1', currentCity = null;
@@ -217,96 +232,58 @@ function updateCityTabs(data) {
 }
 
 function selectCity(cityName) {
-  console.log("selectCity called:", cityName);
   currentCity = cityName;
   document.querySelectorAll('.city-tab').forEach(function(el) {
     el.className = el.getAttribute('data-city') === cityName ? 'city-tab active' : 'city-tab';
   });
-  var detail = cityDetails[cityName];
+  var detail = allData.cityDetails[cityName];
   if (!detail) {
     document.getElementById('cityDetail').innerHTML = '<p style="color:#999;text-align:center;padding:20px">暂无详细信息</p>';
     return;
   }
-  var dn = displayNames[cityName] || cityName;
+  var dn = allData.displayNames[cityName] || cityName;
   var html = '<h3>' + dn + '</h3><div class="desc">' + detail.desc + ' | ' + detail.days + '</div>';
+  
   if (detail.mustVisit && detail.mustVisit.length) {
-    html += '<div class="detail-section"><h4>\uD83D\uDD34 必去景点</h4><ul>';
+    html += '<div class="detail-section"><h4>?? 必去景点</h4><ul>';
     detail.mustVisit.forEach(function(s) {
       var attrName = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
       var hasDetail = detail.attractions && detail.attractions.some(function(a) { return a.name === attrName; });
       if (hasDetail) {
-        html += '<li class="clickable-attraction" onclick="showAttractionDetail(\''+cityName+'\', \''+attrName+'\')">' + s + ' \u203A</li>';
+        html += '<li class="clickable-attraction" data-type="attraction" data-city="' + cityName + '" data-name="' + attrName.replace(/"/g, '&quot;') + '">' + s + ' ›</li>';
       } else {
-        html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s.replace(/'/g,"\\'") + '\')">' + s + '</li>';
+        html += '<li>' + s + '</li>';
       }
     });
     html += '</ul></div>';
   }
+  
   if (detail.optional && detail.optional.length) {
-    html += '<div class="detail-section"><h4>\u26AA 可选景点</h4><ul>';
+    html += '<div class="detail-section"><h4>⚪ 可选景点</h4><ul>';
     detail.optional.forEach(function(s) {
       var attrName2 = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
       var hasDetail2 = detail.attractions && detail.attractions.some(function(a) { return a.name === attrName2; });
       if (hasDetail2) {
-        html += '<li class="clickable-attraction" onclick="showAttractionDetail(\''+cityName+'\', \''+attrName2+'\')">' + s + ' \u203A</li>';
+        html += '<li class="clickable-attraction" data-type="attraction" data-city="' + cityName + '" data-name="' + attrName2.replace(/"/g, '&quot;') + '">' + s + ' ›</li>';
       } else {
-        html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s.replace(/'/g,"\\'") + '\')">' + s + '</li>';
+        html += '<li>' + s + '</li>';
       }
     });
     html += '</ul></div>';
   }
+  
   if (detail.food && detail.food.length) {
-    html += '<div class="detail-section"><h4>\uD83C\uDF5C 美食推荐</h4><ul>';
+    html += '<div class="detail-section"><h4>?? 美食推荐</h4><ul>';
     detail.food.forEach(function(s) {
       var foodName = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
-      var matchedShop = detail.foodShops ? detail.foodShops.find(function(sh) { return sh.specialty.indexOf(foodName) >= 0 || sh.mustOrder.join(',').indexOf(foodName) >= 0; }) : null;
-      if (matchedShop) {
-        html += '<li class="clickable-food" onclick="showFoodShopDetail(\''+cityName+'\', \''+matchedShop.name+'\')">' + s + ' \uD83C\uDFEA</li>';
-      } else {
-        html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s.replace(/'/g,"\\'") + '\')">' + s + '</li>';
-      }
+      html += '<li class="food-item" data-type="food" data-city="' + cityName + '" data-name="' + foodName.replace(/"/g, '&quot;') + '">' + s + '</li>';
     });
     html += '</ul></div>';
   }
-  if (detail.foodShops && detail.foodShops.length) {
-    html += '<div class="detail-section"><h4>\uD83C\uDFEA 推荐店铺</h4>';
-    detail.foodShops.forEach(function(shop) {
-      html += '<div class="food-shop-card" onclick="showFoodShopDetail(\''+cityName+'\', \''+shop.name.replace(/'/g,"\\'")+'\')">';
-      html += '<div class="food-shop-name">' + shop.name + ' \u203A</div>';
-      html += '<div class="food-shop-specialty">' + shop.specialty + '</div>';
-      html += '<div class="food-shop-info"><span class="food-shop-price">' + shop.price + '</span><span>' + shop.address + '</span></div>';
-      html += '</div>';
-    });
-    html += '</div>';
-  }
-  if (detail.breakfast && detail.breakfast.length) {
-    html += '<div class="detail-section"><h4>\uD83C\uDF05 早餐推荐</h4><ul>';
-    detail.breakfast.forEach(function(s) { html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s.replace(/'/g,"\\'") + '\')">' + s + '</li>'; });
-    html += '</ul></div>';
-  }
-  html += '<div class="detail-section"><h4>\uD83C\uDFE8 住宿</h4><div style="font-size:11px;color:#333;line-height:1.8"><div>\uD83D\uDCCD ' + detail.stay + '</div><div>\uD83D\uDCB0 ' + detail.hotelPrice + '</div></div></div>';
-  html += '<div class="detail-section"><h4>\uD83D\uDCB0 消费参考</h4><div style="font-size:11px;color:#333;line-height:1.8"><div>\uD83C\uDF7D\uFE0F 餐饮：' + detail.mealPrice + '</div></div></div>';
-  html += '<div class="detail-section"><h4>\uD83C\uDF24\uFE0F 天气&穿衣</h4><div style="font-size:11px;color:#333;line-height:1.8"><div>' + detail.weather + '</div><div>\uD83D\uDC54 ' + detail.clothes + '</div></div></div>';
-  if (detail.photo && detail.photo.length) {
-    html += '<div class="detail-section"><h4>\uD83D\uDCF8 出片地点</h4><ul>';
-    detail.photo.forEach(function(s) { html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s.replace(/'/g,"\\'") + '\')">' + s + '</li>'; });
-    html += '</ul></div>';
-  }
-  if (detail.tips && detail.tips.length) {
-    html += '<div class="detail-section"><h4>\u26A0\uFE0F 注意事项</h4><ul>';
-    detail.tips.forEach(function(s) { html += '<li class="food-item" onclick="showFoodDetail(\'' + cityName + '\',\'' + s.replace(/'/g,"\\'") + '\')">' + s + '</li>'; });
-    html += '</ul></div>';
-  }
-  if (detail.advanceTicket && detail.advanceTicket.length) {
-    html += '<div class="detail-section"><h4>\uD83C\uDFAB 提前预订</h4><ul>';
-    detail.advanceTicket.forEach(function(s) { html += '<li class="highlight">' + s + '</li>'; });
-    html += '</ul></div>';
-  }
+  
   document.getElementById('cityDetail').innerHTML = html;
-  document.getElementById('cityDetail').scrollTop = 0;
+  document.getElementById('cityTitle').textContent = dn;
 }
-
-
 function drawRoutes(data) {
   // Clear existing polylines
   polylines.forEach(function(p) { map.remove(p); });
