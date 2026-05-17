@@ -151,6 +151,37 @@ var routeCities = {
   6: ["崇左", "千户苗寨", "荔波/黄果树", "贵阳", "抚仙湖", "昆明", "大理", "丽江", "西双版纳"]
 };
 
+
+function showFoodDetail(cityName, foodName) {
+  var detail = cityDetails[cityName];
+  if (!detail || !detail.foodDetails || !detail.foodDetails[foodName]) return;
+  var food = detail.foodDetails[foodName];
+  var html = '<h3>' + foodName + '</h3>';
+  if (food.desc) html += '<p><strong>简介：</strong>' + food.desc + '</p>';
+  if (food.mustTry) html += '<p><strong>必点：</strong>' + food.mustTry + '</p>';
+  if (food.price) html += '<p><strong>价格：</strong>' + food.price + '</p>';
+  if (food.hours) html += '<p><strong>营业时间：</strong>' + food.hours + '</p>';
+  if (food.address) html += '<p><strong>地址：</strong>' + food.address + '</p>';
+  document.getElementById('detailContent').innerHTML = html;
+  document.getElementById('detailPopup').style.display = 'block';
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+  var cityDetail = document.getElementById('cityDetail');
+  if (!cityDetail) return;
+  cityDetail.addEventListener('click', function(e) {
+    var li = e.target.closest('[data-type]');
+    if (!li) return;
+    var type = li.getAttribute('data-type');
+    var city = li.getAttribute('data-city');
+    var name = li.getAttribute('data-name');
+    if (type === 'attraction') {
+      showAttractionDetail(city, name);
+    } else if (type === 'food-shop') {
+      showFoodShopDetail(city, name);
+    }
+  });
+});
 </script>
 <script>
 var map, layerGroup = [], currentRoute = 'route1', currentCity = null;
@@ -224,7 +255,7 @@ function selectCity(cityName) {
       var attrName = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
       var hasDetail = detail.attractions && detail.attractions.some(function(a) { return a.name === attrName; });
       if (hasDetail) {
-        html += '<li class="clickable-attraction" onclick="showAttractionDetail(\''+cityName+'\', \''+attrName.replace(/'/g,"\\'")+'\')">' + s + ' \u203A</li>';
+      html += '<li class="clickable-attraction" data-type="attraction" data-city="' + cityName + '" data-name="' + attrName + '">' + s + '</li>';
       } else {
         html += '<li>' + s + '</li>';
       }
@@ -237,7 +268,7 @@ function selectCity(cityName) {
       var attrName2 = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
       var hasDetail2 = detail.attractions && detail.attractions.some(function(a) { return a.name === attrName2; });
       if (hasDetail2) {
-        html += '<li class="clickable-attraction" onclick="showAttractionDetail(\''+cityName+'\', \''+attrName2.replace(/'/g,"\\'")+'\')">' + s + ' \u203A</li>';
+      html += '<li class="clickable-attraction" data-type="attraction" data-city="' + cityName + '" data-name="' + attrName + '">' + s + '</li>';
       } else {
         html += '<li>' + s + '</li>';
       }
@@ -250,7 +281,7 @@ function selectCity(cityName) {
       var foodName = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
       var matchedShop = detail.foodShops ? detail.foodShops.find(function(sh) { return sh.specialty.indexOf(foodName) >= 0 || sh.mustOrder.join(',').indexOf(foodName) >= 0; }) : null;
       if (matchedShop) {
-        html += '<li class="clickable-food" onclick="showFoodShopDetail(\''+cityName+'\', \''+matchedShop.name.replace(/'/g,"\\'")+'\')">' + s + ' \uD83C\uDFEA</li>';
+      html += '<li class="clickable-food" data-type="food-shop" data-city="' + cityName + '" data-name="' + matchedShop.name + '">' + s + '</li>';
       } else {
         html += '<li>' + s + '</li>';
       }
@@ -260,7 +291,7 @@ function selectCity(cityName) {
   if (detail.foodShops && detail.foodShops.length) {
     html += '<div class="detail-section"><h4>\uD83C\uDFEA 推荐店铺</h4>';
     detail.foodShops.forEach(function(shop) {
-      html += '<div class="food-shop-card" onclick="showFoodShopDetail(\''+cityName+'\', \''+shop.name.replace(/'/g,"\\'")+'\')">';
+      html += '<div class="food-shop-card" data-type="food-shop" data-city="' + cityName + '" data-name="' + shop.name + '">';
       html += '<div class="food-shop-name">' + shop.name + ' \u203A</div>';
       html += '<div class="food-shop-specialty">' + shop.specialty + '</div>';
       html += '<div class="food-shop-info"><span class="food-shop-price">' + shop.price + '</span><span>' + shop.address + '</span></div>';
