@@ -2179,7 +2179,7 @@ function selectCity(cityName) {
       var attrName = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
       var hasDetail = (detail.attractions || []).some(function(a) { return a.name === attrName; });
       if (hasDetail) {
-      html += '<li class="clickable-attraction" data-type="attraction" data-city="' + cityName + '" data-name="' + attrName2 + '">' + s + '</li>';
+      html += '<li class="clickable-attraction" data-type="attraction" data-city="' + cityName + '" data-name="' + attrName + '">' + s + '</li>';
       } else {
         html += '<li>' + s + '</li>';
       }
@@ -2192,7 +2192,7 @@ function selectCity(cityName) {
       var attrName2 = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
       var hasDetail2 = (detail.attractions || []).some(function(a) { return a.name === attrName2; });
       if (hasDetail2) {
-      html += '<li class="clickable-attraction" data-type="attraction" data-city="' + cityName + '" data-name="' + attrName + '">' + s + '</li>';
+      html += '<li class="clickable-attraction" data-type="attraction" data-city="' + cityName + '" data-name="' + attrName2 + '">' + s + '</li>';
       } else {
         html += '<li>' + s + '</li>';
       }
