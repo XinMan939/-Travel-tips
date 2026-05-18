@@ -2177,9 +2177,9 @@ function selectCity(cityName) {
     html += '<div class="detail-section"><h4>\uD83D\uDD34 必去景点</h4><ul>';
     detail.mustVisit.forEach(function(s) {
       var attrName = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
-      var hasDetail = detail.attractions && detail.attractions.some(function(a) { return a.name === attrName; });
+      var hasDetail = (detail.attractions || []).some(function(a) { return a.name === attrName; });
       if (hasDetail) {
-      html += '<li class="clickable-attraction" data-type="attraction" data-city="' + cityName + '" data-name="' + attrName + '">' + s + '</li>';
+      html += '<li class="clickable-attraction" data-type="attraction" data-city="' + cityName + '" data-name="' + attrName2 + '">' + s + '</li>';
       } else {
         html += '<li>' + s + '</li>';
       }
@@ -2190,7 +2190,7 @@ function selectCity(cityName) {
     html += '<div class="detail-section"><h4>\u26AA 可选景点</h4><ul>';
     detail.optional.forEach(function(s) {
       var attrName2 = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
-      var hasDetail2 = detail.attractions && detail.attractions.some(function(a) { return a.name === attrName2; });
+      var hasDetail2 = (detail.attractions || []).some(function(a) { return a.name === attrName2; });
       if (hasDetail2) {
       html += '<li class="clickable-attraction" data-type="attraction" data-city="' + cityName + '" data-name="' + attrName + '">' + s + '</li>';
       } else {
