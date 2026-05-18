@@ -2353,7 +2353,7 @@ function showAttractionDetail(cityName, attrName) {
   if (!city || !city.attractions) return;
   var attr = null;
   for (var i = 0; i < city.attractions.length; i++) {
-    if (city.attractions[i].name === attrName || attrName.indexOf(city.attractions[i].name) >= 0 || city.attractions[i].name.indexOf(attrName.split('+')[0].trim()) >= 0) { attr = city.attractions[i]; break; }
+    if (city.attractions[i].name && (city.attractions[i].name === attrName || attrName.indexOf(city.attractions[i].name) >= 0 || city.attractions[i].name.indexOf(attrName.split('+')[0].trim()) >= 0)) { attr = city.attractions[i]; break; }
   }
   if (!attr) return;
 
