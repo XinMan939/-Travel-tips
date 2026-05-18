@@ -2177,7 +2177,7 @@ function selectCity(cityName) {
     html += '<div class="detail-section"><h4>\uD83D\uDD34 必去景点</h4><ul>';
     detail.mustVisit.forEach(function(s) {
       var attrName = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
-      var hasDetail = (detail.attractions || []).some(function(a) { return a.name === attrName || attrName.indexOf(a.name) >= 0 || a.name.indexOf(attrName.split('+')[0].trim()) >= 0; });
+      var hasDetail = (detail.attractions || []).some(function(a) { return a.name && (a.name === attrName || attrName.indexOf(a.name) >= 0 || a.name.indexOf(attrName.split('+')[0].trim()) >= 0); });
       if (hasDetail) {
       html += '<li class="clickable-attraction" data-type="attraction" data-city="' + cityName + '" data-name="' + attrName + '">' + s + '</li>';
       } else {
@@ -2190,7 +2190,7 @@ function selectCity(cityName) {
     html += '<div class="detail-section"><h4>\u26AA 可选景点</h4><ul>';
     detail.optional.forEach(function(s) {
       var attrName2 = s.replace(/（.*/, '').replace(/\(.*/, '').trim();
-      var hasDetail2 = (detail.attractions || []).some(function(a) { return a.name === attrName2 || attrName2.indexOf(a.name) >= 0 || a.name.indexOf(attrName2.split('+')[0].trim()) >= 0; });
+      var hasDetail2 = (detail.attractions || []).some(function(a) { return a.name && (a.name === attrName2 || attrName2.indexOf(a.name) >= 0 || a.name.indexOf(attrName2.split('+')[0].trim()) >= 0); });
       if (hasDetail2) {
       html += '<li class="clickable-attraction" data-type="attraction" data-city="' + cityName + '" data-name="' + attrName2 + '">' + s + '</li>';
       } else {
@@ -2353,7 +2353,7 @@ function showAttractionDetail(cityName, attrName) {
   if (!city || !city.attractions) return;
   var attr = null;
   for (var i = 0; i < city.attractions.length; i++) {
-    if (city.attractions[i].name && (city.attractions[i].name === attrName || attrName.indexOf(city.attractions[i].name) >= 0 || city.attractions[i].name.indexOf(attrName.split('+')[0].trim()) >= 0)) { attr = city.attractions[i]; break; }
+    if (city.attractions[i].name && (city.attractions[i].name && (city.attractions[i].name === attrName || attrName.indexOf(city.attractions[i].name) >= 0 || city.attractions[i].name.indexOf(attrName.split('+')[0].trim()) >= 0))) { attr = city.attractions[i]; break; }
   }
   if (!attr) return;
 
