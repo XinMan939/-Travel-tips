@@ -1,0 +1,923 @@
+﻿﻿﻿﻿﻿﻿<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>灵境向导 · 新疆自驾攻略交互地图</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{width:100%;height:100%;overflow:hidden;font-family:"Microsoft YaHei","PingFang SC",sans-serif;background:#0d1b2a}
+#map{width:100%;height:100%;background:#0d1b2a}
+
+/* ===== 标题面板（左上） ===== */
+#panel{
+  position:absolute;top:12px;left:12px;z-index:1000;
+  background:rgba(30,25,18,0.85);color:#eee;padding:14px 18px;
+  border-radius:10px;font-size:13px;line-height:1.7;
+  backdrop-filter:blur(8px);max-width:280px;pointer-events:none;
+  box-shadow:0 4px 20px rgba(0,0,0,0.4);
+  border-left:3px solid #E8734A;
+}
+#panel h2{font-size:16px;margin-bottom:6px;color:#FFB88C;font-family:'KaiTi','STKaiti',serif}
+#panel .dim{color:#aaa;font-size:11px;margin-top:6px}
+
+/* ===== 底部信息栏 ===== */
+#zoom-info{
+  position:absolute;bottom:26px;right:12px;z-index:1000;
+  background:rgba(0,0,0,0.7);color:#ccc;padding:6px 12px;
+  border-radius:6px;font-size:12px;font-family:monospace;pointer-events:none;
+}
+#hint{
+  position:absolute;bottom:30px;left:12px;z-index:1000;
+  background:rgba(0,0,0,0.55);color:#aaa;padding:6px 12px;
+  border-radius:6px;font-size:11px;pointer-events:none;
+}
+
+/* ===== 控制按钮（右上） ===== */
+#controls{
+  position:absolute;top:12px;right:12px;z-index:1000;
+  display:flex;flex-direction:column;gap:6px;
+}
+#controls button{
+  padding:5px 11px;border:1px solid #555;background:rgba(30,30,50,0.82);color:#ccc;
+  border-radius:6px;cursor:pointer;font-size:12px;
+  backdrop-filter:blur(6px);transition:all .2s;
+  text-align:left;white-space:nowrap;
+}
+#controls button:hover{background:rgba(60,60,80,0.85);border-color:#ffb88c;color:#ffb88c}
+#controls button.on{background:rgba(230,115,74,0.7);border-color:#E8734A;color:#fff}
+
+/* ===== 图例 ===== */
+#legend{
+  position:absolute;bottom:54px;left:12px;z-index:1000;
+  background:rgba(0,0,0,0.65);color:#ccc;padding:8px 12px;
+  border-radius:6px;font-size:11px;pointer-events:none;
+  line-height:1.8;
+}
+
+#legend .dot{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:3px;vertical-align:middle}
+
+.leaflet-container{background:#0d1b2a!important}
+.leaflet-tile{border:none!important;outline:none!important}
+.leaflet-tile-pane>*{image-rendering:pixelated}
+.leaflet-container path:focus,.leaflet-container path:focus-visible{outline:none!important}
+.geo-l{background:none!important;border:none!important;box-shadow:none!important;font-family:KaiTi,STKaiti,SimSun,serif!important;pointer-events:none!important;white-space:nowrap!important;text-shadow:0 0 3px rgba(255,255,255,.9),0 0 6px rgba(255,255,255,.7),0 1px 2px rgba(0,0,0,.4)}
+.geo-l span{display:inline-block;transform:translate(-50%,-50%);text-shadow:0 0 3px rgba(255,255,255,.9),0 0 6px rgba(255,255,255,.7),0 1px 2px rgba(0,0,0,.4)}
+
+/* ===== 缩放控件移至右下 ===== */
+.leaflet-control-zoom{position:absolute!important;top:auto!important;bottom:80px!important;right:12px!important;left:auto!important;border:1px solid #555!important;border-radius:8px!important;overflow:hidden!important;box-shadow:0 2px 12px rgba(0,0,0,0.4)!important}.leaflet-control-zoom a{background:rgba(30,30,50,0.85)!important;color:#ccc!important;border-bottom:1px solid #444!important;width:32px!important;height:32px!important;line-height:32px!important;font-size:18px!important;transition:all .2s!important}.leaflet-control-zoom a:hover{background:rgba(60,60,80,0.9)!important;color:#ffb88c!important}
+
+/* ===== 路线组件样式 ===== */
+#route-card{position:absolute;z-index:1000;background:rgba(15,12,8,0.88);border-radius:8px;overflow:hidden;backdrop-filter:blur(8px)}
+.rc-seg{padding:8px 14px;cursor:pointer;border-left:3px solid transparent;transition:all .2s;font-size:12px}
+.rc-seg.b{border-left-color:#E8734A}
+.rc-seg.c{border-left-color:#3B8EC8}
+.rc-seg:hover{background:rgba(255,255,255,0.05)}
+.rc-seg.active.b{background:rgba(232,115,74,0.2);border-left-color:#E8734A}
+.rc-seg.active.c{background:rgba(59,142,200,0.2);border-left-color:#3B8EC8}
+.rc-label{color:#ddd;font-weight:bold}
+.rc-stats{color:#999;font-size:10px;margin-top:2px}
+
+/* 城市详情面板 */
+#city-panel{position:absolute;top:12px;right:12px;z-index:1001;width:380px;max-height:calc(100vh - 30px);background:rgba(15,12,8,0.92);border-radius:10px;display:none;flex-direction:column;overflow:hidden;backdrop-filter:blur(10px);box-shadow:0 4px 24px rgba(0,0,0,0.5);font-size:14px;color:#ddd}
+#city-panel.show{display:flex}
+#city-panel-topbar{display:flex;justify-content:space-between;align-items:center;padding:10px 16px;border-bottom:1px solid rgba(255,255,255,0.1);background:rgba(20,15,10,0.95)}
+#city-panel-title{font-size:16px;color:#FFB88C;font-weight:bold}
+#city-panel-close{cursor:pointer;color:#aaa;font-size:16px;padding:4px 8px;border-radius:4px;transition:all .2s}
+#city-panel-close:hover{color:#fff;background:rgba(255,255,255,0.1)}
+#city-panel-body{flex:1;overflow-y:auto;padding:14px 16px;line-height:1.7}
+#city-panel-body h3{color:#FFB88C;font-size:14px;margin:12px 0 6px;border-left:2px solid #E8734A;padding-left:8px}
+#city-panel-body .spot-item,.cp-food-item{padding:8px 0;border-bottom:1px solid rgba(255,255,255,0.06);cursor:pointer}
+#city-panel-body .spot-item:hover{background:rgba(255,255,255,0.03)}
+.spot-name{color:#FFB88C;font-weight:bold;font-size:13px}
+.spot-detail{display:none;color:#aaa;font-size:12px;padding:4px 0 4px 12px;line-height:1.7}
+.spot-detail.show{display:block}
+.shop-box{background:rgba(255,255,255,0.04);border-radius:6px;padding:8px 12px;margin:4px 0;font-size:12px}
+.shop-box .sn{color:#FFB88C;font-weight:bold}
+.shop-box .si{color:#aaa;font-size:11px}
+/* 充电桩标注 */
+.cs-g{color:#4CAF50}.cs-y{color:#FFC107}.cs-o{color:#FF9800}.cs-r{color:#F44336}
+.restricted-tip{background:rgba(40,10,10,0.95)!important;border:1px solid #8B0000!important;border-radius:6px!important;padding:6px 10px!important;font-size:12px!important;box-shadow:0 2px 12px rgba(0,0,0,0.5)!important}
+.restricted-tip::before{border-top-color:#8B0000!important}
+.restricted-marker{background:none!important;border:none!important;box-shadow:none!important;white-space:nowrap!important}
+</style>
+</head>
+<body>
+<div id="map"></div>
+
+<!-- 标题面板 -->
+<div id="panel">
+  <h2>🗺️ 灵境向导 · 新疆自驾攻略</h2>
+  北疆南疆双环线 · 485处自然人文标注<br/>
+  <span class="dim">🖱 滚轮缩放 · 拖拽平移 · 点击城市查看详情</span>
+</div>
+
+<!-- 控制按钮 -->
+<div id="controls">
+  <button id="tb" class="on" onclick="tog('t')">🌄 地形底图</button>
+  <button id="ob" class="on" onclick="tog('o')">🗺️ 省界线</button>
+  <button id="lb" class="on" onclick="tog('l')">🏷️ 地理标注</button>
+  <button onclick="map.setView([38,104],4)">🏠 重置视角</button>
+
+  <button id="rb" class="on" onclick="toggleRouteUI()">🧭 自驾路线</button>
+</div>
+
+<!-- 图例 -->
+<div id="legend">
+  <span class="dot" style="background:#6B4E2A"></span> 山脉 &nbsp;
+  <span class="dot" style="background:#7A5A3A"></span> 高原 &nbsp;
+  <span class="dot" style="background:#4A6A3A"></span> 平原/草原 &nbsp;
+  <span class="dot" style="background:#A08450"></span> 沙漠 &nbsp;
+  <span class="dot" style="background:#2A6B9A"></span> 湖泊 &nbsp;
+  <span class="dot" style="background:#3A7BB5"></span> 河流
+</div>
+
+<!-- 缩放信息 -->
+<div id="zoom-info">Zoom: 4</div>
+<div id="hint">🖱 点击省份高亮 · 放大发现更多细节</div>
+<!-- ===== 路线信息卡 ===== -->
+<div id="route-card">
+  <div class="rc-seg b" id="rc-seg-b" onclick="switchRoute('b')">
+    <div class="rc-label">B线 · 北疆伊犁环线</div>
+    <div class="rc-stats" id="rc-stats-b">加载中...</div>
+  </div>
+  <div class="rc-seg c" id="rc-seg-c" onclick="switchRoute('c')">
+    <div class="rc-label">C线 · 南疆帕米尔环线</div>
+    <div class="rc-stats" id="rc-stats-c">加载中...</div>
+  </div>
+</div>
+
+<!-- ===== 城市详情侧边面板 ===== -->
+<div id="city-panel">
+  <div id="city-panel-topbar"><span id="city-panel-title"></span><span id="city-panel-close" onclick="closeCityDetail()">&#10005;</span></div>
+  <div id="city-panel-body"></div>
+</div>
+
+
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="xj_routes.js"></script>
+<script src="city_v2.js"></script>
+
+<script>
+var map=L.map('map',{
+  crs:L.CRS.EPSG3857,
+  center:[38,104],
+  zoom:4,
+  minZoom:4,
+  maxZoom:8,
+  maxBounds:[[0,65],[58,145]],
+  maxBoundsViscosity:0.8,
+  attributionControl:false
+});
+
+// Tiled terrain layer
+var tl=L.tileLayer('tiles_china/{z}/{x}/{y}.png',{
+  minZoom:4,
+  maxZoom:8,
+  updateInterval:100,
+  errorTileUrl:'tiles_china/blank.png'
+}).addTo(map);
+
+var gl,lm;
+
+// Province GeoJSON
+fetch('china_provinces.geojson').then(r=>r.json()).then(function(d){
+  gl=L.geoJSON(d,{style:function(){return{color:'#fff',weight:.9,opacity:.35,fillOpacity:0}},onEachFeature:function(f,l){
+    l.bindTooltip(f.properties.name,{direction:'center',opacity:.8});
+    l.on('mouseover',function(){l.setStyle({fillColor:'#ff6b35',fillOpacity:.18,color:'#fff',weight:2})});
+    l.on('mouseout',function(){var a=map._ap;l.setStyle(a===l?{fillColor:'#ff6b35',fillOpacity:.22,color:'#ff6b35',weight:2.5}:{fillOpacity:0,color:'#fff',weight:.9,opacity:.35})});
+    l.on('click',function(){if(map._ap&&map._ap!==l)map._ap.setStyle({fillOpacity:0,color:'#fff',weight:.9,opacity:.35});map._ap=l;l.setStyle({fillColor:'#ff6b35',fillOpacity:.22,color:'#ff6b35',weight:2.5})})
+  }}).addTo(map)});
+
+// Vector labels (zoom-responsive)
+lm=L.layerGroup();
+var labelMarkers=[];
+function makeIcon(name,clr,baseSz,z){
+  var sz=Math.max(6,baseSz*Math.pow(1.12,z-4));
+  return L.divIcon({className:'geo-l',html:'<span style="font-size:'+sz+'px;color:'+clr+';font-weight:bold">'+name+'</span>',iconSize:[0,0],iconAnchor:[0,0]});
+}
+var ml=[
+  // === z4 全国级 ════════════════════════════════
+  // XXL 大陆尺度 ▸ 16-18px
+  [33,90,"青藏高原","#7A5A3A",18,4],[39.5,84,"塔克拉玛干沙漠","#A08450",15,4],
+  [41,112,"内蒙古高原","#7A5A3A",16,4],[36,107,"黄土高原","#7A5A3A",15,4],
+  [25.5,103,"云贵高原","#7A5A3A",15,4],
+  // XL 大山系 ▸ 13-15px
+  [28.5,87,"喜马拉雅山","#6B4E2A",15,4],[42.5,86,"天山","#6B4E2A",14,4],[36.5,84.5,"昆仑山","#6B4E2A",14,4],
+  [48.5,121,"大兴安岭","#6B4E2A",13,4],[37,113.5,"太行山","#6B4E2A",12,4],
+  [30,98.5,"横断山","#6B4E2A",13,4],[39,96.5,"祁连山","#6B4E2A",13,4],[48,88,"阿尔泰山","#6B4E2A",13,4],
+  [34,108,"秦岭","#6B4E2A",12,4],[38.5,74.5,"帕米尔高原","#7A5A3A",14,4],
+  // L 大盆地、大平原 ▸ 12-14px
+  [37.5,115,"华北平原","#4A6A3A",14,4],[46.5,125,"东北平原","#4A6A3A",14,4],
+  [31.5,115,"长江中下游平原","#4A6A3A",14,4],
+  [40,83.5,"塔里木盆地","#8B6E4E",13,4],[45.5,87.5,"准噶尔盆地","#8B6E4E",13,4],
+  [37,94,"柴达木盆地","#8B6E4E",12,4],[30.5,105,"四川盆地","#8B6E4E",12,4],
+  [43.5,89.5,"古尔班通古特沙漠","#A08450",12,4],[39.5,102.5,"巴丹吉林沙漠","#A08450",12,4],
+  [38.5,106.5,"腾格里沙漠","#A08450",11,4],[30.5,113,"两湖盆地","#8B6E4E",11,4],
+  // L 大江大河 ▸ 11-13px
+  [29.5,105,"长江","#3A7BB5",13,4],[36,100,"黄河","#3A7BB5",13,4],
+  [23.5,110.5,"珠江","#3A7BB5",11,4],[29.3,90.5,"雅鲁藏布江","#3A7BB5",11,4],[47.3,126.5,"松花江","#3A7BB5",11,4],
+  // L 大湖 ▸ 10-12px
+  [37,100,"青海湖","#2A6B9A",12,4],[29,116.2,"鄱阳湖","#2A6B9A",11,4],[29.3,112.5,"洞庭湖","#2A6B9A",11,4],
+  [31.2,120.2,"太湖","#2A6B9A",10,4],[30.7,90.8,"纳木错","#2A6B9A",10,4],
+  // 长江黄河分段 ▸ 9-10px
+  [30.5,111,"长江","#3A7BB5",10,4],[31.5,118,"长江","#3A7BB5",10,4],[32,121,"长江","#3A7BB5",10,4],[28.5,100.5,"金沙江","#3A7BB5",9,4],
+  [36.5,106,"黄河","#3A7BB5",10,4],[35,111,"黄河","#3A7BB5",10,4],[37,117.5,"黄河","#3A7BB5",10,4],
+
+  // === z5 大区级 ════════════════════════════════
+  // 山系 ▸ 10-14px
+  [42,128,"长白山","#6B4E2A",14,5],[25,113,"南岭","#6B4E2A",13,5],[28,114.5,"武夷山","#6B4E2A",13,5],
+  [30.5,90.5,"念青唐古拉山","#6B4E2A",13,5],[33.2,92,"唐古拉山","#6B4E2A",13,5],[34.5,97.5,"巴颜喀拉山","#6B4E2A",12,5],
+  [31,83,"冈底斯山","#6B4E2A",12,5],[41.5,110,"阴山","#6B4E2A",12,5],[31.3,115,"大别山","#6B4E2A",12,5],
+  [24.5,122,"中央山脉","#6B4E2A",12,5],[38.5,89.5,"阿尔金山","#6B4E2A",12,5],[29.6,101.8,"贡嘎山","#6B4E2A",11,5],
+  [40.5,117,"燕山","#6B4E2A",11,5],[38.7,105.8,"贺兰山","#6B4E2A",11,5],[30.8,110,"巫山","#6B4E2A",11,5],
+  [26,106.5,"苗岭","#6B4E2A",10,5],[32,109,"大巴山","#6B4E2A",10,5],[27.5,110.3,"雪峰山","#6B4E2A",10,5],
+  [35.6,106.1,"六盘山","#6B4E2A",9,5],[41.5,125.5,"长白山脉","#6B4E2A",8,5],
+  // 河流 ▸ 9-13px
+  [49,136,"黑龙江","#3A7BB5",13,5],[33,118,"淮河","#3A7BB5",12,5],[47.5,87,"额尔齐斯河","#3A7BB5",12,5],
+  [26.5,98.9,"怒江","#3A7BB5",11,5],[21.5,101.5,"澜沧江","#3A7BB5",11,5],[41,122,"辽河","#3A7BB5",10,5],
+  [30.2,120.5,"钱塘江","#3A7BB5",10,5],[39,117.2,"海河","#3A7BB5",9,5],[26,119,"闽江","#3A7BB5",9,5],[41,101,"弱水","#3A7BB5",8,5],
+  // 平原/草原/走廊 ▸ 10-13px
+  [34.5,109,"关中平原","#4A6A3A",13,5],[33,120.5,"江淮平原","#4A6A3A",12,5],[30.5,104,"成都平原","#4A6A3A",12,5],
+  [45.5,125,"松嫩平原","#4A6A3A",11,5],[49.5,120,"呼伦贝尔","#4A6A3A",11,5],[44,116,"锡林郭勒草原","#4A6A3A",11,5],
+  [40.5,92,"库姆塔格沙漠","#A08450",11,5],[40,108.5,"库布齐沙漠","#A08450",10,5],
+  [42.5,89,"吐鲁番盆地","#8B6E4E",10,5],[40,99,"河西走廊","#A08050",12,5],
+  // 湖泊 ▸ 9-13px
+  [31.5,88.8,"色林错","#2A6B9A",12,5],[28.9,90.6,"羊卓雍措","#2A6B9A",11,5],[45.2,132.4,"兴凯湖","#2A6B9A",11,5],
+  [48.8,117.3,"呼伦湖","#2A6B9A",11,5],[42,86.9,"博斯腾湖","#2A6B9A",10,5],[33.9,102.3,"若尔盖湿地","#2A6B9A",10,5],
+  [31.5,117.5,"巢湖","#2A6B9A",10,5],[44.9,82.9,"艾比湖","#2A6B9A",9,5],[35.6,91.1,"可可西里湖","#2A6B9A",9,5],
+
+  // === z6 省域级 ════════════════════════════════
+  // 雪山/名山 ▸ 8-12px
+  [27.99,86.92,"珠穆朗玛峰","#6B4E2A",12,6],[29.66,91.12,"布达拉宫","#C07040",11,6],[31.1,81.3,"冈仁波齐","#6B4E2A",11,6],[28.4,98.7,"梅里雪山","#6B4E2A",11,6],
+  [34.8,99.5,"阿尼玛卿","#6B4E2A",10,6],[36.3,117.1,"泰山","#6B4E2A",10,6],[30.1,118.2,"黄山","#6B4E2A",10,6],
+  [29.3,110.5,"张家界","#6B4E2A",10,6],[43.8,88.3,"博格达峰","#6B4E2A",9,6],[38.3,75.0,"慕士塔格峰","#6B4E2A",9,6],
+  [35.9,76.5,"乔戈里峰","#6B4E2A",9,6],[29.6,95.0,"南迦巴瓦峰","#6B4E2A",9,6],[27.1,100.2,"玉龙雪山","#6B4E2A",9,6],
+  [31.1,102.9,"四姑娘山","#6B4E2A",9,6],[34.5,110.1,"华山","#6B4E2A",9,6],[39.0,113.6,"五台山","#6B4E2A",9,6],
+  [27.9,108.7,"梵净山","#6B4E2A",9,6],[30.54,114.3,"黄鹤楼","#C07040",9,6],[31.5,110.5,"神农架","#6B4E2A",9,6],[33.3,101.1,"年保玉则","#6B4E2A",8,6],
+  // 湖泊 ▸ 8-12px
+  [44.6,81.2,"赛里木湖","#2A6B9A",12,6],[48.8,87.0,"喀纳斯湖","#2A6B9A",11,6],[25.8,100.2,"洱海","#2A6B9A",11,6],
+  [30.7,81.5,"玛旁雍错","#2A6B9A",10,6],[24.8,102.7,"滇池","#2A6B9A",9,6],[24.5,102.9,"抚仙湖","#2A6B9A",9,6],
+  [27.7,100.8,"泸沽湖","#2A6B9A",9,6],[47.2,87.3,"乌伦古湖","#2A6B9A",9,6],[33.5,79.7,"班公错","#2A6B9A",9,6],
+  [29.5,119.0,"千岛湖","#2A6B9A",8,6],[43.6,126.9,"松花湖","#2A6B9A",8,6],[38.9,116.0,"白洋淀","#2A6B9A",8,6],
+  [43.9,88.1,"天池","#2A6B9A",8,6],[31.0,92.2,"当惹雍错","#2A6B9A",8,6],
+  // 河谷/草原/峡谷 ▸ 9-12px
+  [43.5,82,"伊犁河谷","#4A6A3A",12,6],[42.9,84.2,"巴音布鲁克","#4A6A3A",11,6],[43.3,84.0,"那拉提草原","#4A6A3A",10,6],
+  [43.2,82.5,"喀拉峻草原","#4A6A3A",10,6],[33.2,103.9,"九寨沟","#4A6A3A",10,6],[28.5,100.3,"稻城亚丁","#4A6A3A",10,6],
+  [27,98.8,"怒江大峡谷","#6B4E2A",10,6],[25.0,110.5,"桂林山水","#4A6A3A",10,6],[21.7,100.8,"西双版纳","#4A6A3A",9,6],
+  [41.9,101.1,"额济纳","#A08450",10,6],[37.5,105.0,"沙坡头","#A08450",9,6],
+  [34.2,103.2,"扎尕那","#6B4E2A",8,6],[35.5,93,"可可西里","#7A5A3A",12,6],
+  // 省域级河流 ▸ 7-10px
+  [41,84,"塔里木河","#3A7BB5",10,6],[43.8,83.3,"喀什河","#3A7BB5",8,6],[42.5,86,"开都河","#3A7BB5",7,6],
+  [43.5,81.5,"巩乃斯河","#3A7BB5",7,6],[35,90.5,"沱沱河","#3A7BB5",7,6],[26.2,100.8,"元江","#3A7BB5",7,6],
+
+  // === z7 市域级 ════════════════════════════════
+  // 景点/地标 ▸ 6-9px
+  [47.2,89.8,"可可托海","#6B4E2A",9,7],[44.1,85.0,"安集海大峡谷","#6B4E2A",9,7],
+  [27.3,112.7,"衡山","#6B4E2A",8,7],[28.4,121.1,"雁荡山","#6B4E2A",8,7],[25.99,105.67,"黄果树瀑布","#6B4E2A",8,7],
+  [27.2,100.1,"虎跳峡","#6B4E2A",8,7],[42.9,89.6,"火焰山","#A08450",8,7],[46.1,85.8,"魔鬼城","#A08450",8,7],
+  [31.5,79.8,"扎达土林","#A08450",8,7],[42.6,80.9,"夏塔古道","#6B4E2A",8,7],
+  [39.7,113.7,"恒山","#6B4E2A",7,7],[34.5,113.0,"嵩山","#6B4E2A",7,7],[36.2,120.6,"崂山","#6B4E2A",7,7],
+  [25.7,100.1,"苍山","#6B4E2A",7,7],[41.0,123.1,"千山","#6B4E2A",7,7],[23,113.5,"西樵山","#6B4E2A",7,7],
+  // 小水体 ▸ 6-8px
+  [47.9,86.9,"五彩滩","#A08450",7,7],[47.0,87.0,"白沙湖","#2A6B9A",8,7],[38.4,75.3,"喀拉库勒湖","#2A6B9A",8,7],[38.75,75.0,"白沙湖","#2A6B9A",9,7],
+  [40.0,116.5,"密云水库","#2A6B9A",8,7],[42.9,82.2,"琼库什台","#4A6A3A",7,7],
+  [24,109.5,"柳江","#3A7BB5",6,7],
+
+  // === 江西 ═
+  [28.68,115.88,"滕王阁","#C07040",9,6],[29.57,115.98,"庐山","#6B4E2A",11,6],[28.95,118.05,"三清山","#6B4E2A",10,6],
+  [28.1,116.97,"龙虎山","#6B4E2A",9,7],[26.57,114.16,"井冈山","#6B4E2A",9,7],
+  [27.47,114.17,"武功山","#6B4E2A",9,7],
+  // === 贵州 ═
+  [25.3,107.7,"小七孔","#4A6A3A",10,6],[26.49,108.17,"西江千户苗寨","#B07030",9,7],
+  [25.1,104.9,"万峰林","#6B4E2A",8,7],[27.7,109.0,"镇远古镇","#B07030",8,7],
+  // === 湖南 ═
+  [29.38,113.09,"岳阳楼","#C07040",9,6],[27.95,109.6,"凤凰古城","#B07030",9,7],[26.3,110.8,"崀山","#6B4E2A",8,7],
+  // === 云南 ═
+  [24.82,103.33,"石林","#6B4E2A",10,6],[27.83,99.7,"香格里拉","#4A6A3A",10,6],
+  [27.8,99.9,"普达措","#4A6A3A",9,7],[23.1,101.1,"元阳梯田","#4A6A3A",9,7],
+  [25.0,98.5,"腾冲","#4A6A3A",9,7],
+  // === 四川 ═
+  [29.55,103.5,"峨眉山","#6B4E2A",11,6],[29.54,103.77,"乐山大佛","#B07030",9,7],
+  [31.0,103.6,"都江堰","#B07030",8,7],[29.5,102.0,"海螺沟","#6B4E2A",9,7],
+  [32.3,100.3,"色达","#B07030",9,7],
+  // === 甘肃 ═
+  [38.93,100.45,"张掖丹霞","#A08450",10,6],[39.8,98.3,"嘉峪关","#B07030",10,6],
+  [34.35,106.0,"麦积山","#6B4E2A",9,7],
+  // === 陕西 ═
+  [34.38,109.27,"兵马俑","#B07030",10,6],[36.15,110.44,"壶口瀑布","#3A7BB5",10,6],
+  // === 湖北 ═
+  [32.4,111.0,"武当山","#6B4E2A",11,6],[30.2,109.5,"恩施大峡谷","#6B4E2A",10,6],
+  [31.44,110.33,"神农顶","#6B4E2A",9,7],
+  // === 安徽 ═
+  [30.48,117.83,"九华山","#6B4E2A",10,6],[30.01,117.99,"宏村","#B07030",8,7],
+  // === 福建 ═
+  [24.59,117.05,"南靖土楼","#B07030",9,7],[26.64,119.55,"太姥山","#6B4E2A",8,7],
+  // === 广西 ═
+  [22.85,106.73,"德天瀑布","#3A7BB5",9,7],[25.77,109.6,"龙脊梯田","#4A6A3A",9,7],
+  // === 浙江 ═
+  [30.25,120.15,"西湖","#2A6B9A",10,6],[28.7,121.4,"天台山","#6B4E2A",8,7],
+  [29.87,121.55,"普陀山","#6B4E2A",9,7],
+  // === 山西 ═
+  [34.85,110.30,"鹳雀楼","#C07040",9,6],[40.11,113.13,"云冈石窟","#B07030",9,7],[37.2,112.18,"平遥古城","#B07030",8,7],
+  // === 河南 ═
+  [34.55,112.47,"龙门石窟","#B07030",9,7],[35.45,113.4,"云台山","#6B4E2A",9,7],
+  // === 山东 ═
+  [36.66,117.0,"趵突泉","#3A7BB5",8,7],[35.6,116.98,"曲阜三孔","#B07030",8,7],
+  // === 京津冀 ═
+  [40.6,117.2,"雾灵山","#6B4E2A",9,7],[40.5,115.9,"野三坡","#6B4E2A",8,7],
+  [41.1,116.3,"坝上草原","#4A6A3A",9,7],[42.1,117.2,"木兰围场","#4A6A3A",9,7],
+  // === 江浙沪 ═
+  [30.8,120.7,"西塘古镇","#B07030",8,7],[31.6,120.3,"鼋头渚","#4A6A3A",8,7],
+  [31.0,119.8,"天目湖","#2A6B9A",8,7],
+  // === 东三省 ═
+  [43.88,126.57,"雾凇岛","#4A6A3A",8,7],[48.75,126.12,"五大连池","#2A6B9A",9,7],
+  [53.48,122.36,"漠河北极村","#4A6A3A",9,7],[43.85,125.35,"净月潭","#2A6B9A",7,7],
+  // === 海台 ═
+  [18.24,109.52,"天涯海角","#4A6A3A",8,7],[18.4,109.9,"蜈支洲岛","#2A6B9A",8,7],
+  [23.85,120.94,"日月潭","#2A6B9A",8,7],[25.17,121.55,"阳明山","#6B4E2A",8,7],
+  // === 青宁蒙 ═
+  [36.7,99.08,"茶卡盐湖","#2A6B9A",10,6],[38.8,106.2,"西夏王陵","#B07030",8,7],
+  [42.2,101.4,"居延海","#2A6B9A",9,6],
+  // === 广东 ═
+  [25.0,113.7,"丹霞山","#6B4E2A",9,7],[23.5,117.1,"南澳岛","#2A6B9A",7,7],
+  // === 重庆 ═
+  [29.3,108.1,"武隆天坑","#6B4E2A",9,7],
+
+  // === 青甘大环线 ═
+  [40.09,94.67,"鸣沙山月牙泉","#A08450",11,6],[40.04,94.8,"莫高窟","#B07030",10,6],
+  [37.85,95.33,"大柴旦翡翠湖","#2A6B9A",10,6],[37.6,93.5,"乌素特水上雅丹","#A08450",10,6],
+  [37.4,94.0,"东台吉乃尔湖","#2A6B9A",9,7],[38.0,92.0,"茫崖翡翠湖","#2A6B9A",9,7],
+  [40.35,97.0,"玉门关","#B07030",9,7],[37.6,101.8,"祁连草原","#4A6A3A",10,6],
+  [38.2,100.2,"卓尔山","#6B4E2A",9,7],[37.5,101.7,"门源油菜花","#4A6A3A",9,7],
+  [38.5,93.0,"俄博梁雅丹","#A08450",9,7],
+  // === 四川 (补) ═
+  [32.8,103.8,"黄龙","#4A6A3A",10,6],[27.8,102.3,"螺髻山","#6B4E2A",8,7],
+  [29.5,101.0,"雅拉雪山","#6B4E2A",9,7],
+  // === 西藏 (补) ═
+  [29.5,94.0,"鲁朗林海","#4A6A3A",9,7],[29.9,93.0,"巴松措","#2A6B9A",9,7],
+  [29.2,96.0,"然乌湖","#2A6B9A",9,7],[27.7,91.7,"勒布沟","#4A6A3A",8,7],
+  // === 云南 (补) ═
+  [27.8,100.2,"独克宗古城","#B07030",8,7],[25.6,100.2,"鸡足山","#6B4E2A",8,7],
+  // === 新疆 (补) ═
+  [42.5,84.0,"巩乃斯","#4A6A3A",9,7],[45.0,87.0,"一号冰川","#6B4E2A",8,7],
+  [47.0,85.5,"禾木","#4A6A3A",9,7],[39.0,88.0,"罗布泊","#A08450",9,7],
+  // === 宁夏/内蒙 (补) ═
+  [38.5,105.2,"阿拉善英雄会","#A08450",9,7],[40.5,108.5,"七星湖沙漠","#A08450",8,7],
+  // === 湖南 (补) ═
+  [28.5,114.0,"大围山","#6B4E2A",7,7],[29.4,113.1,"君山岛","#4A6A3A",7,7],
+  // === 辽宁 (补) ═
+  [41.3,124.6,"本溪水洞","#4A6A3A",8,7],[40.7,123.0,"凤凰山","#6B4E2A",7,7],
+  // === 浙江 (补) ═
+  [28.0,120.8,"楠溪江","#3A7BB5",8,7],[30.6,119.4,"莫干山","#6B4E2A",8,7],
+  // === 山东 (补) ═
+  [35.7,117.6,"地下大峡谷","#4A6A3A",7,7],
+  // === 河南 (补) ═
+  [33.7,112.0,"老君山","#6B4E2A",10,6],
+  // === 吉林 (补) ═
+  [42.5,128.0,"长白山西坡","#6B4E2A",9,7],
+  // === 青海 (补) ═
+  [37.4,99.0,"哈拉湖","#2A6B9A",9,7],
+
+  // === 湖南 ═ z7 深度扩展
+  [25.95,113.4,"东江湖","#2A6B9A",9,7],[25.9,113.15,"高椅岭","#6B4E2A",9,7],
+  [28.19,112.93,"岳麓山","#6B4E2A",8,7],[28.17,112.96,"橘子洲","#4A6A3A",8,7],
+  [27.8,111.0,"紫鹊界梯田","#4A6A3A",9,7],[28.75,109.95,"芙蓉镇","#B07030",8,7],
+  [29.05,110.48,"天门山","#6B4E2A",10,7],[28.8,111.5,"桃花源","#4A6A3A",8,7],
+  [25.0,112.85,"莽山","#6B4E2A",9,7],[26.1,110.9,"南山牧场","#4A6A3A",8,7],
+  [28.33,109.6,"矮寨大桥","#B07030",8,7],[27.93,112.5,"韶山","#B07030",8,7],
+  [30.1,110.8,"壶瓶山","#6B4E2A",8,7],[28.3,109.6,"德夯","#4A6A3A",8,7],
+  [28.0,111.4,"湄江","#4A6A3A",8,7],
+
+  // === 四川 (补) ═
+  [30.9,103.3,"青城山","#6B4E2A",9,7],[30.6,103.0,"西岭雪山","#6B4E2A",9,7],
+  [31.9,103.6,"毕棚沟","#4A6A3A",9,7],[29.0,102.3,"牛背山","#6B4E2A",8,7],
+  [28.9,101.6,"木格措","#2A6B9A",9,7],[30.3,101.5,"塔公草原","#4A6A3A",8,7],
+  [32.2,101.5,"达古冰川","#6B4E2A",9,7],[30.0,102.9,"碧峰峡","#4A6A3A",8,7],
+
+  // === 云南 (补) ═
+  [27.8,99.6,"白水台","#4A6A3A",9,7],[26.5,99.8,"沙溪古镇","#B07030",8,7],
+  [28.3,103.8,"大山包","#6B4E2A",8,7],[24.4,98.6,"瑞丽","#4A6A3A",8,7],
+
+  // === 广东 (补) ═
+  [23.2,112.5,"鼎湖山","#6B4E2A",9,7],[23.6,112.5,"七星岩","#4A6A3A",8,7],
+  [23.3,114.5,"罗浮山","#6B4E2A",8,7],[21.6,111.8,"海陵岛","#2A6B9A",9,7],
+  [23.8,114.7,"万绿湖","#2A6B9A",8,7],
+
+  // === 广西 (补) ═
+  [21.0,109.1,"涠洲岛","#2A6B9A",9,7],[24.2,111.3,"黄姚古镇","#B07030",8,7],
+  [22.7,106.7,"明仕田园","#4A6A3A",8,7],[23.1,106.3,"通灵大峡谷","#4A6A3A",8,7],
+
+  // === 福建 (补) ═
+  [24.45,118.07,"鼓浪屿","#2A6B9A",9,7],[27.0,119.0,"白水洋","#4A6A3A",8,7],
+  [26.9,120.1,"霞浦滩涂","#4A6A3A",9,7],[24.7,117.6,"云水谣","#B07030",8,7],
+
+  // === 江西 (补) ═
+  [29.3,117.8,"婺源","#4A6A3A",10,7],[28.3,117.4,"龟峰","#6B4E2A",8,7],
+  [27.6,114.3,"明月山","#6B4E2A",8,7],[29.1,116.6,"鄱阳湖湿地","#2A6B9A",9,7],
+
+  // === 贵州 (补) ═
+  [26.3,105.8,"织金洞","#6B4E2A",9,7],[25.1,104.8,"马岭河峡谷","#6B4E2A",8,7],
+  [28.5,106.0,"赤水丹霞","#A08450",9,7],[25.3,108.9,"加榜梯田","#4A6A3A",8,7],
+
+  // === 湖北 (补) ═
+  [30.8,111.2,"三峡人家","#4A6A3A",9,7],[30.4,110.4,"清江画廊","#4A6A3A",8,7],
+  [30.3,109.0,"腾龙洞","#4A6A3A",8,7],[31.5,110.0,"大九湖","#4A6A3A",9,7],
+
+  // === 浙江 (补) ═
+  [30.75,120.48,"乌镇","#B07030",8,7],[28.6,118.5,"江郎山","#6B4E2A",8,7],
+  [28.7,120.3,"仙都","#6B4E2A",8,7],
+
+  // === 安徽 (补) ═
+  [30.2,117.8,"西递","#B07030",8,7],[31.7,118.5,"采石矶","#6B4E2A",7,7],
+
+  // === 陕西 (补) ═
+  [33.9,108.6,"太白山","#6B4E2A",10,7],[35.4,110.2,"洽川湿地","#4A6A3A",8,7],
+
+  // === 重庆 (补) ═
+  [31.0,109.9,"小三峡","#4A6A3A",8,7],[30.0,106.4,"钓鱼城","#B07030",7,7],
+
+  // === 江苏 (补) ═
+  [31.1,119.9,"天目湖","#2A6B9A",8,7],[32.0,119.5,"茅山","#6B4E2A",8,7],
+
+  // === 河南 (补) ═
+  [33.9,111.6,"重渡沟","#4A6A3A",8,7],[33.5,111.8,"宝天曼","#6B4E2A",7,7],
+
+  // === 新疆 (深度补) ═
+  [44.5,81.1,"果子沟","#4A6A3A",9,7],[41.7,82.9,"库车大峡谷","#A08450",9,7],
+  [41.5,80.8,"温宿大峡谷","#A08450",9,7],[43.6,89.8,"江布拉克","#4A6A3A",9,7],
+  [48.7,87.2,"白哈巴","#4A6A3A",9,7],[41.9,86.2,"轮台胡杨林","#4A6A3A",9,7],
+  [37.8,75.2,"慕士塔格冰川","#6B4E2A",9,7],[42.7,94.0,"哈密魔鬼城","#A08450",8,7],
+  [47.5,89.5,"可可苏里","#2A6B9A",8,7],[46.7,83.0,"巴尔鲁克山","#6B4E2A",8,7],
+  [43.65,83.8,"唐布拉百里画廊","#4A6A3A",9,7],[38.2,80.6,"和田河","#3A7BB5",8,7],
+
+  // === 西藏 (深度补) ═
+  [28.7,87.2,"萨普神山","#6B4E2A",9,7],[28.3,85.4,"希夏邦马峰","#6B4E2A",9,7],
+  [29.0,92.3,"拉姆拉错","#2A6B9A",9,7],[28.8,90.2,"普莫雍错","#2A6B9A",9,7],
+  [29.5,95.3,"雅鲁藏布大峡谷","#6B4E2A",11,6],[31.5,79.8,"古格遗址","#B07030",9,7],
+  [29.9,85.5,"佩枯错","#2A6B9A",8,7],[29.5,96.5,"来古冰川","#6B4E2A",9,7],
+  [31.0,90.5,"羌塘无人区","#7A5A3A",10,6],[29.3,94.9,"南伊沟","#4A6A3A",9,7],
+  [30.3,91.1,"羊八井温泉","#4A6A3A",8,7],[32.0,84.0,"羌塘草原","#4A6A3A",9,7],
+
+  // === 甘肃 (深度补) ═
+  [35.0,102.6,"拉卜楞寺","#B07030",9,7],[34.1,102.6,"郎木寺","#B07030",9,7],
+  [38.7,100.1,"平山湖大峡谷","#A08450",9,7],[40.2,99.8,"金塔胡杨林","#4A6A3A",9,7],
+  [38.9,99.7,"冰沟丹霞","#A08450",8,7],[38.2,101.1,"山丹军马场","#4A6A3A",8,7],
+  [40.6,93.1,"雅丹魔鬼城","#A08450",9,7],[40.0,94.2,"阳关","#B07030",8,7],
+  [34.6,104.5,"贵清山","#6B4E2A",7,7],[35.5,103.2,"松鸣岩","#6B4E2A",7,7],
+
+  // === 青海 (深度补) ═
+  [36.5,101.8,"塔尔寺","#B07030",9,7],[36.2,101.6,"坎布拉","#6B4E2A",9,7],
+  [34.0,96.0,"三江源","#4A6A3A",10,6],[34.9,97.2,"扎陵湖","#2A6B9A",9,7],
+  [35.0,97.7,"鄂陵湖","#2A6B9A",9,7],[38.3,90.3,"艾肯泉","#A08450",9,7],
+  [36.1,100.8,"龙羊峡","#6B4E2A",8,7],[38.5,94.0,"冷湖雅丹","#A08450",9,7],
+  [33.0,96.5,"玉树草原","#4A6A3A",8,7],[36.4,102.2,"互助北山","#6B4E2A",8,7],
+
+  // === 内蒙古 (深度补) ═
+  [47.2,119.9,"阿尔山","#6B4E2A",10,7],[50.2,120.1,"额尔古纳湿地","#4A6A3A",9,7],
+  [50.9,121.5,"莫尔道嘎","#4A6A3A",8,7],[43.3,117.1,"阿斯哈图石林","#6B4E2A",9,7],
+  [42.3,116.5,"乌兰布统","#4A6A3A",9,7],[43.3,112.9,"达里诺尔湖","#2A6B9A",9,7],
+  [51.0,119.7,"室韦","#4A6A3A",8,7],[40.5,109.2,"响沙湾","#A08450",8,7],
+  [50.5,121.5,"根河湿地","#4A6A3A",9,7],[39.4,102.5,"巴丹吉林沙漠","#A08450",10,7],
+  [49.4,117.7,"呼伦贝尔草原","#4A6A3A",9,7],[43.7,121.0,"科尔沁草原","#4A6A3A",9,7],
+  // === 新疆 (追加) ═
+  [37.3,80.0,"玉龙喀什河","#3A7BB5",9,7],[37.5,79.5,"喀拉喀什河","#3A7BB5",9,7],[42.8,80.5,"乌孙古道","#6B4E2A",9,7],
+  [39.47,75.99,"喀什古城","#B07030",10,6],
+  [37.77,75.23,"塔什库尔干","#A08450",9,7],[42.8,89.2,"火焰山","#A08450",8,7],
+  // === 北京 ═
+  [39.92,116.40,"故宫","#C07040",12,6],[39.88,116.41,"天坛","#C07040",10,6],
+  [40.35,116.02,"八达岭长城","#C07040",11,6],[40.00,116.28,"颐和园","#4A6A3A",10,6],
+  [40.01,116.29,"圆明园","#C07040",9,7],
+  // === 天津 ═
+  [39.14,117.18,"古文化街","#B07030",9,7],[40.23,117.41,"黄崖关长城","#C07040",9,7],
+  [40.08,117.27,"盘山","#6B4E2A",8,7],[39.16,117.80,"滨海航母","#B07030",8,7],
+  // === 海南 ═
+  [18.25,109.50,"亚龙湾","#2A6B9A",10,6],[20.04,110.35,"海口骑楼","#B07030",9,7],
+  [18.77,109.52,"五指山","#6B4E2A",9,7],[18.80,110.40,"万宁石梅湾","#2A6B9A",9,7],
+  [18.92,108.72,"尖峰岭","#6B4E2A",8,7],[19.15,110.58,"博鳌","#B07030",9,7],
+  [18.24,109.52,"三亚湾","#2A6B9A",9,7],[19.62,110.80,"文昌椰林","#4A6A3A",8,7],
+  // === 台湾 ═
+  [23.52,120.81,"阿里山","#6B4E2A",10,6],[24.18,121.49,"太鲁阁","#6B4E2A",10,7],
+  [21.95,120.80,"垦丁","#2A6B9A",9,7],[23.57,119.57,"澎湖","#4A6A3A",9,7],
+  [25.11,121.85,"九份","#B07030",9,7],[24.08,121.19,"清境农场","#4A6A3A",8,7],
+  // === 上海 ═
+  [31.24,121.49,"外滩","#B07030",11,6],[31.23,121.49,"豫园","#C07040",10,6],
+  [31.24,121.50,"东方明珠","#B07030",10,6],[31.11,121.06,"朱家角","#B07030",9,7],
+  [31.22,121.47,"田子坊","#B07030",8,7],[31.48,121.97,"崇明东滩","#4A6A3A",8,7],
+  // === 香港 ═
+  [22.30,114.17,"维多利亚港","#B07030",11,6],[22.28,114.15,"太平山","#6B4E2A",10,6],
+  [22.32,114.17,"旺角","#B07030",9,7],[22.31,114.04,"迪士尼","#B07030",9,7],
+  [22.23,114.18,"海洋公园","#4A6A3A",9,7],
+  // === 澳门 ═
+  [22.20,113.54,"大三巴","#C07040",10,6],[22.14,113.56,"威尼斯人","#B07030",9,7],
+  [22.19,113.54,"妈祖阁","#C07040",9,7],
+  // === 辽宁 (补) ═
+  [41.80,123.43,"沈阳故宫","#C07040",10,6],[38.87,121.60,"大连金石滩","#2A6B9A",10,6],
+  [40.90,121.80,"红海滩","#A08450",9,7],[40.12,124.38,"鸭绿江断桥","#C07040",9,7],
+  [40.63,120.73,"兴城古城","#B07030",8,7],
+  // === 山东 (补) ═
+  [37.82,120.74,"蓬莱阁","#C07040",10,6],[37.50,122.15,"刘公岛","#C07040",9,7],
+  [36.07,120.38,"青岛栈桥","#B07030",10,6],[34.56,117.73,"台儿庄","#B07030",9,7],
+  [37.93,120.73,"长岛","#2A6B9A",9,7],
+  // === 宁夏 (补) ═
+  [38.62,106.07,"镇北堡影视城","#B07030",9,7],[38.80,106.33,"沙湖","#2A6B9A",9,7],
+  [38.17,105.70,"黄沙古渡","#A08450",8,7],
+  // === 福建 (补) ═
+  [26.08,119.30,"三坊七巷","#B07030",9,7],[25.09,119.14,"湄洲岛","#4A6A3A",9,7],
+  [25.80,117.03,"冠豸山","#6B4E2A",8,7],[26.90,116.83,"大金湖","#2A6B9A",8,7],
+  // === 吉林 (补) ═
+  [45.25,124.10,"查干湖","#2A6B9A",10,6],[42.78,130.35,"珲春防川","#B07030",9,7],
+  [42.40,126.50,"龙湾群","#4A6A3A",8,7],
+  // === 河南 (补) ═
+  [34.80,114.35,"清明上河园","#B07030",10,6],[34.72,112.60,"白马寺","#C07040",10,6],
+  [34.50,112.99,"少林寺","#C07040",11,6],
+  // === 黑龙江 (补) ═
+  [46.75,126.15,"亚布力","#6B4E2A",9,7],[43.88,128.90,"镜泊湖","#2A6B9A",9,7],
+  [47.18,124.23,"扎龙湿地","#4A6A3A",9,7],
+  // === 重庆 (补) ═
+  [29.71,105.71,"大足石刻","#C07040",10,6],[29.60,106.57,"磁器口","#B07030",9,7],
+  // === 山西 (补) ═
+  [39.56,113.18,"应县木塔","#C07040",10,6],[39.17,112.80,"雁门关","#C07040",9,7],
+  [37.87,112.56,"晋祠","#C07040",9,7],
+  // === 江苏 (补) ═
+  [32.06,118.85,"中山陵","#C07040",10,6],[31.32,120.63,"拙政园","#4A6A3A",10,6],
+  [31.11,120.84,"周庄","#B07030",10,6],[31.32,120.72,"同里","#B07030",9,7],
+  // === 安徽 (补) ═
+  [30.73,116.33,"天柱山","#6B4E2A",9,7],[32.28,118.29,"琅琊山","#6B4E2A",8,7],
+  // === 广东 (补) ═
+  [23.17,113.41,"白云山","#6B4E2A",9,6],[23.01,113.32,"长隆","#B07030",10,6],
+  [23.12,113.36,"黄埔军校","#C07040",9,7],
+  // === 陕西 (补) ═
+  [34.21,108.95,"大雁塔","#C07040",11,6],[34.34,107.87,"法门寺","#C07040",9,7],
+  [34.26,108.94,"西安城墙","#C07040",10,6],
+  // === 浙江 (补) ═
+  [29.21,121.10,"天台国清寺","#C07040",9,7],[30.89,120.44,"南浔","#B07030",9,7],
+  [28.37,121.39,"石塘","#B07030",8,7],
+  // === 湖北 (补) ═
+  [30.83,111.00,"三峡大坝","#B07030",11,6],[30.36,110.24,"清江画廊","#4A6A3A",9,7]
+];
+ml.forEach(function(m){
+  var mk=L.marker([m[0],m[1]],{icon:makeIcon(m[2],m[3],m[4],4),interactive:false});
+  mk._bd={name:m[2],color:m[3],base:m[4],minZ:m[5]||4};
+  mk.addTo(lm);
+  labelMarkers.push(mk);
+});
+lm.addTo(map);
+function updateLabels(){
+  var z=map.getZoom();
+  labelMarkers.forEach(function(mk){
+    var d=mk._bd;
+    if(z<d.minZ){mk.setOpacity(0);}
+    else{
+      mk.setOpacity(1);
+      mk.setIcon(makeIcon(d.name,d.color,d.base,z));
+    }
+  });
+}
+updateLabels();
+map.on('zoomend',function(){
+  updateLabels();
+  document.getElementById('zoom-info').textContent='Zoom: '+map.getZoom();
+});
+
+function tog(x){
+  if(x==='t'){var b=document.getElementById('tb');if(map.hasLayer(tl)){map.removeLayer(tl);b.classList.remove('on')}else{map.addLayer(tl);b.classList.add('on')}}
+  if(x==='o'&&gl){var b=document.getElementById('ob');if(map.hasLayer(gl)){map.removeLayer(gl);b.classList.remove('on')}else{map.addLayer(gl);b.classList.add('on')}}
+  if(x==='l'){var b=document.getElementById('lb');if(map.hasLayer(lm)){map.removeLayer(lm);b.classList.remove('on')}else{map.addLayer(lm);b.classList.add('on')}}
+}
+
+
+// ========== 不对外开放景点 ==========
+var RESTRICTED = [
+  // 🚫 不对外开放
+  {name:"艾比湖",city:"精河",lat:44.88,lng:82.92,type:"closed",reason:"国家级湿地自然保护区，核心区不对外开放，外围观鸟需提前联系保护区管理局"},
+  {name:"可可托海三号矿坑",city:"富蕴",lat:47.22,lng:89.80,type:"closed",reason:"部分矿洞区域不对外开放，仅地面观光区可游览，禁止无人机拍摄"},
+  {name:"安集海大峡谷",city:"奎屯",lat:44.35,lng:84.89,type:"closed",reason:"非正式景区暂不收门票，悬崖边缘无护栏，地质不稳定区域有塌方风险，当地已开始封闭管理"},
+  {name:"米兰遗址",city:"若羌",lat:39.02,lng:88.17,type:"closed",reason:"汉代鄯善国（楼兰）都城遗址，地处军事管理区附近，进入需审批，普通游客无法进入"},
+  {name:"楼兰故城遗址",city:"若羌",lat:40.53,lng:89.92,type:"closed",reason:"国家级重点文保单位，地处罗布泊无人区，不对公众开放，仅考古研究经国家文物局批准可进入"},
+  // ⚠️ 需办理边防证/通行证
+  {name:"红其拉甫国门",city:"喀什",lat:37.77,lng:75.23,type:"permit",reason:"中巴边境海拔4733m，需提前办理边境通行证（喀什办理），开放受政策和天气影响，务必出发前确认"},
+  {name:"白哈巴村",city:"布尔津",lat:48.69,lng:86.80,type:"permit",reason:"中哈边境第一村，需办理边境通行证（哈巴河县边防大队办理），持护照游客须跟团"},
+  {name:"盘龙古道",city:"喀什",lat:37.82,lng:75.45,type:"permit",reason:"网红36km/608弯公路，每年11月-3月封闭，大盘龙段遇积雪可能封闭，出发前查询开放状态"},
+  {name:"天山神秘大峡谷",city:"库车",lat:41.72,lng:82.98,type:"permit",reason:"雨天可能关闭（山洪风险），谷内无手机信号，冬季部分路段封闭，建议提前致电景区确认"},
+  {name:"温宿大峡谷",city:"库车",lat:41.61,lng:80.39,type:"permit",reason:"雨后峡谷底部可能封闭（洪水），须四驱越野车进入且禁止轿车驶入，出发前确认路况"}
+];
+var restrictedLayer = L.layerGroup().addTo(map);
+function renderRestricted() {
+  restrictedLayer.clearLayers();
+  for (var i = 0; i < RESTRICTED.length; i++) {
+    var r = RESTRICTED[i];
+    var isClosed = r.type === 'closed';
+    var emoji = isClosed ? '🚫' : '⚠️';
+    var color = isClosed ? '#FF4444' : '#FF9100';
+    var label = isClosed ? '不对外开放' : '需办证/受限';
+    var icon = L.divIcon({
+      className: 'restricted-marker',
+      html: '<span style="font-size:18px">' + emoji + '</span>',
+      iconSize: [20, 20], iconAnchor: [10, 10]
+    });
+    L.marker([r.lat, r.lng], {icon: icon}).addTo(restrictedLayer)
+      .bindTooltip('<b style="color:' + color + '">' + emoji + ' ' + r.name + '</b> <span style="color:#999;font-size:10px">[' + label + ']</span><br><span style="color:#ccc;font-size:11px">' + r.reason + '</span>', {
+        direction: 'top', offset: [0, -10],
+        className: 'restricted-tip'
+      });
+  }
+}
+setTimeout(renderRestricted, 600);
+
+// ========== 路线系统 ==========
+var routeLayer = L.layerGroup().addTo(map);
+var chargeLayer = L.layerGroup().addTo(map);
+var cityLayer = L.layerGroup().addTo(map);
+var currentRoute = 'b';
+
+function positionRouteCard() {
+  var panel = document.getElementById('panel');
+  var card = document.getElementById('route-card');
+  if (panel && card) {
+    var rect = panel.getBoundingClientRect();
+    card.style.left = rect.left + 'px';
+    card.style.top = (rect.bottom + 8) + 'px';
+    card.style.width = rect.width + 'px';
+  }
+}
+
+function segColor(i, total, route) {
+  var hueOffset = route === 'b' ? 15 : 200;
+  var hue = (hueOffset + i * 35) % 360;
+  var sat = 65 + (i % 3) * 8;
+  var light = 45 + (i % 4) * 5;
+  return 'hsl(' + hue + ',' + sat + '%,' + light + '%)';
+}
+
+// Find route object from XJ_ROUTES array
+function getRoute(id) {
+  if (typeof XJ_ROUTES === 'undefined') return null;
+  for (var i = 0; i < XJ_ROUTES.length; i++) {
+    if (XJ_ROUTES[i].id === id) return XJ_ROUTES[i];
+  }
+  return null;
+}
+
+function renderRoutes() {
+  routeLayer.clearLayers();
+  chargeLayer.clearLayers();
+  cityLayer.clearLayers();
+
+  var route = getRoute(currentRoute);
+  if (!route) { console.warn('No route data for ' + currentRoute); return; }
+
+  var segs = route.segs || [];
+
+  for (var i = 0; i < segs.length; i++) {
+    var seg = segs[i];
+    var pts = seg.pts || [];
+    if (pts.length < 2) continue;
+
+    // pts use [lng, lat] — convert to Leaflet [lat, lng]
+    var latlngs = [];
+    for (var j = 0; j < pts.length; j++) {
+      latlngs.push([pts[j][1], pts[j][0]]);
+    }
+
+    var color = segColor(i, segs.length, currentRoute);
+    L.polyline(latlngs, {
+      color: color, weight: 3.5, opacity: 0.85,
+      smoothFactor: 1, interactive: false
+    }).addTo(routeLayer);
+
+    // Midpoint: geographic center of segment (not array midpoint)
+    var z = map.getZoom();
+    var dist = seg.dist || 0;
+    var time = seg.time || 0;
+    if ((dist > 0 || time > 0) && pts.length >= 2) {
+      // Compute cumulative distances along the segment
+      var cumDist = [0];
+      var total = 0;
+      for (var k = 1; k < pts.length; k++) {
+        var d = L.latLng(pts[k-1][1], pts[k-1][0]).distanceTo(L.latLng(pts[k][1], pts[k][0]));
+        total += d;
+        cumDist.push(total);
+      }
+      // Find point at 50% of total distance
+      var half = total / 2;
+      var mi = 0;
+      for (var k = 1; k < cumDist.length; k++) {
+        if (cumDist[k] >= half) { mi = k; break; }
+      }
+      // Interpolate between mi-1 and mi for precise midpoint
+      var ratio = (half - cumDist[mi-1]) / (cumDist[mi] - cumDist[mi-1]);
+      var midLat = pts[mi-1][1] + (pts[mi][1] - pts[mi-1][1]) * ratio;
+      var midLng = pts[mi-1][0] + (pts[mi][0] - pts[mi-1][0]) * ratio;
+
+      var lblSize = Math.max(9, 10 + (z - 4) * 1.8);
+      var lbl = Math.round(dist) + 'km·' + time.toFixed(1) + 'h';
+      L.marker([midLat, midLng], {
+        icon: L.divIcon({
+          className: 'geo-l',
+          html: '<span style="font-size:' + lblSize + 'px;color:' + color + ';font-weight:bold;text-shadow:0 0 4px rgba(0,0,0,0.7),0 0 8px rgba(0,0,0,0.5)">' + lbl + '</span>',
+          iconSize: [0, 0], iconAnchor: [0, 0]
+        }),
+        interactive: false
+      }).addTo(routeLayer);
+    }
+  }
+
+  renderCityMarkers();
+  updateRouteStats();
+}
+
+function renderCityMarkers() {
+  if (typeof XJ_CITIES === 'undefined') return;
+  var cities = XJ_CITIES;
+  var seen = {};
+
+  for (var i = 0; i < cities.length; i++) {
+    var c = cities[i];
+    if (!c.routes || c.routes.indexOf(currentRoute) === -1) continue;
+    var cname = c.name;
+    if (seen[cname]) continue;
+    seen[cname] = true;
+
+    var isHome = (cname === '宁乡');
+    var z = map.getZoom();
+    var r = Math.max(4, (isHome ? 5 : 4.5) + (z - 4) * 1.2);
+    var fs = Math.max(9, 10 + (z - 4) * 1.5);
+
+    L.circleMarker([c.lat, c.lng], {
+      radius: r,
+      color: isHome ? '#FF6B35' : '#FFB88C',
+      weight: isHome ? (z >= 6 ? 3 : 2) : 1.5,
+      fillColor: isHome ? '#FF6B35' : '#E8734A',
+      fillOpacity: isHome ? 1 : 0.8
+    }).addTo(cityLayer).on('click', (function(name) {
+      return function() { showCityDetail(name); };
+    })(cname));
+
+    // Text label
+    L.marker([c.lat, c.lng], {
+      icon: L.divIcon({
+        className: 'geo-l',
+        html: '<span style="font-size:' + fs + 'px;color:' + (isHome ? '#FF6B35' : '#FFB88C') + ';font-weight:bold;text-shadow:0 0 4px rgba(0,0,0,0.8)">' + cname + '</span>',
+        iconSize: [0, 0], iconAnchor: [0, 17]
+      }),
+      interactive: false
+    }).addTo(cityLayer);
+  }
+}
+
+function updateRouteStats() {
+  var route = getRoute(currentRoute);
+  if (!route) return;
+
+  var segs = route.segs || [];
+  var totalDist = 0;
+  for (var i = 0; i < segs.length; i++) {
+    totalDist += (segs[i].dist || 0);
+  }
+
+  var elId = 'rc-stats-' + (currentRoute === 'b' ? 'b' : 'c');
+  var el = document.getElementById(elId);
+  if (el) {
+    el.textContent = Math.round(totalDist) + 'km \u00b7 ' + segs.length + '\u6BB5';
+  }
+
+  var bSeg = document.getElementById('rc-seg-b');
+  var cSeg = document.getElementById('rc-seg-c');
+  if (bSeg) bSeg.classList.toggle('active', currentRoute === 'b');
+  if (cSeg) cSeg.classList.toggle('active', currentRoute === 'c');
+}
+
+function switchRoute(r) {
+  currentRoute = r;
+  renderRoutes();
+}
+
+function showCityDetail(name) {
+  var panel = document.getElementById('city-panel');
+  var title = document.getElementById('city-panel-title');
+  var body = document.getElementById('city-panel-body');
+  if (!panel || !body) return;
+
+  var cd = (typeof DATA !== 'undefined') ? DATA[name] : null;
+
+  if (!cd) {
+    body.innerHTML = '<p style="color:#aaa;font-size:13px">暂无该城市详情数据</p>';
+    title.textContent = name;
+    panel.classList.add('show');
+    return;
+  }
+
+  title.textContent = name;
+  var html = '';
+
+  // Intro
+  if (cd.intro) {
+    html += '<p style="color:#ccc;font-size:13px;margin-bottom:10px;line-height:1.7">' + cd.intro + '</p>';
+  }
+
+  // Spots — desc always visible, m[] details collapsed
+  if (cd.spots && cd.spots.length) {
+    html += '<h3>🏞️ 景点 (' + cd.spots.length + ')</h3>';
+    for (var i = 0; i < cd.spots.length; i++) {
+      var sp = cd.spots[i];
+      var did = 'spd-' + name.replace(/\s/g,'') + '-' + i;
+      html += '<div class="spot-item" onclick="var d=document.getElementById(\'' + did + '\');d.classList.toggle(\'show\')">';
+      var restrictedNames = ['艾比湖','可可托海三号矿坑','安集海大峡谷','米兰遗址','楼兰故城遗址','红其拉甫国门','白哈巴村','盘龙古道','天山神秘大峡谷','温宿大峡谷'];
+      var rInfo = {};
+      for (var ri = 0; ri < RESTRICTED.length; ri++) { rInfo[RESTRICTED[ri].name] = RESTRICTED[ri]; }
+      var isR = !!rInfo[sp.n];
+      var rBadge = isR ? (rInfo[sp.n].type === 'closed' ? ' 🚫<span style="color:#FF4444;font-size:10px">不对外开放</span>' : ' ⚠️<span style="color:#FF9100;font-size:10px">需办证</span>') : '';
+      html += '<div class="spot-name">◆ ' + sp.n + rBadge + (sp.l ? ' <span style="font-size:10px">' + sp.l + '</span>' : '') + '</div>';
+      if (sp.desc) html += '<div style="color:#bbb;font-size:12px;line-height:1.6;margin:3px 0">' + sp.desc + '</div>';
+      if (sp.m && sp.m.length) html += '<div style="color:#666;font-size:10px">▼ 展开详情</div>';
+      html += '<div class="spot-detail" id="' + did + '">';
+      if (sp.m && sp.m.length) {
+        for (var k = 0; k < sp.m.length; k++) {
+          html += '<div style="font-size:11px;color:#999;padding:2px 0"><b>' + sp.m[k][0] + '</b> ' + sp.m[k][1] + ' <span style="font-size:9px">' + sp.m[k][2] + '</span></div>';
+        }
+      }
+      html += '</div></div>';
+    }
+  }
+
+  // Food — collapsible: name+desc always visible, shops hidden
+  if (cd.food && cd.food.length) {
+    html += '<h3>🍜 美食 (' + cd.food.length + ')</h3>';
+    for (var i = 0; i < cd.food.length; i++) {
+      var fd = cd.food[i];
+      var fid = 'fd-' + name.replace(/\s/g,'') + '-' + i;
+      html += '<div class="cp-food-item" onclick="var d=document.getElementById(\'' + fid + '\');d.classList.toggle(\'show\')">';
+      html += '<div style="color:#FFB88C;font-weight:bold;font-size:13px">' + fd.n + (fd.l ? ' <span style="font-size:10px">' + fd.l + '</span>' : '') + '</div>';
+      if (fd.desc) html += '<div style="color:#bbb;font-size:12px;line-height:1.6;margin:3px 0">' + fd.desc + '</div>';
+      if (fd.shops && fd.shops.length) html += '<div style="color:#666;font-size:10px">▼ ' + fd.shops.length + '家店铺</div>';
+      html += '<div class="spot-detail" id="' + fid + '">';
+      if (fd.shops && fd.shops.length) {
+        for (var j = 0; j < fd.shops.length; j++) {
+          var sh = fd.shops[j];
+          html += '<div class="shop-box">';
+          html += '<div class="sn">🏪 ' + sh.name + (sh.src ? ' <span style="font-size:9px">' + sh.src + '</span>' : '') + '</div>';
+          if (sh.addr) html += '<div class="si">📍 ' + sh.addr + '</div>';
+          if (sh.price) html += '<div class="si">💰 ' + sh.price + '</div>';
+          if (sh.sig) html += '<div class="si">🍽️ ' + sh.sig + '</div>';
+          if (sh.taste) html += '<div class="si">👅 ' + sh.taste + '</div>';
+          if (sh.parking) html += '<div class="si">🚗 ' + sh.parking + '</div>';
+          if (sh.hours) html += '<div class="si">🕐 ' + sh.hours + '</div>';
+          if (sh.tags) html += '<div class="si">🏷️ ' + sh.tags + '</div>';
+          html += '</div>';
+        }
+      }
+      html += '</div></div>';
+    }
+  }
+
+  // Accommodation
+  if (cd.acc && cd.acc.area) {
+    html += '<h3>🏨 住宿推荐</h3>';
+    html += '<div style="color:#FFB88C;font-weight:bold">📍 ' + cd.acc.area + '</div>';
+    if (cd.acc.desc) html += '<div style="color:#aaa;font-size:12px;margin:4px 0">' + cd.acc.desc + '</div>';
+    if (cd.acc.reason) html += '<div style="color:#888;font-size:11px">' + cd.acc.reason + '</div>';
+    if (cd.acc.tips) html += '<div style="color:#888;font-size:11px;margin-top:2px">👉 ' + cd.acc.tips + '</div>';
+  }
+
+  body.innerHTML = html;
+  panel.classList.add('show');
+}
+
+
+function closeCityDetail() {
+  document.getElementById('city-panel').classList.remove('show');
+}
+
+function toggleRouteUI() {
+  var btn = document.getElementById('rb');
+  if (map.hasLayer(routeLayer)) {
+    map.removeLayer(routeLayer);
+    map.removeLayer(chargeLayer);
+    map.removeLayer(cityLayer);
+    btn.classList.remove('on');
+  } else {
+    map.addLayer(routeLayer);
+    map.addLayer(chargeLayer);
+    map.addLayer(cityLayer);
+    btn.classList.add('on');
+  }
+}
+
+// Init
+setTimeout(function() {
+  positionRouteCard();
+  renderRoutes();
+}, 500);
+
+map.on('moveend', positionRouteCard);
+map.on('zoomend', function() {
+  positionRouteCard();
+  renderRoutes();
+});
+
+
+</script>
+</body>
+</html>
