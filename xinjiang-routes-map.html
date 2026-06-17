@@ -172,11 +172,11 @@ var map=L.map('map',{
 });
 
 // Tiled terrain layer
-var tl=L.tileLayer('tiles_china/{z}/{x}/{y}.png',{
+var tl=L.tileLayer('https://cdn.jsdelivr.net/gh/XinMan939/-Travel-tips@main/tiles_china/{z}/{x}/{y}.png',{
   minZoom:4,
   maxZoom:8,
   updateInterval:100,
-  errorTileUrl:'tiles_china/blank.png'
+  errorTileUrl:'https://cdn.jsdelivr.net/gh/XinMan939/-Travel-tips@main/tiles_china/blank.png'
 }).addTo(map);
 
 var gl,lm;
