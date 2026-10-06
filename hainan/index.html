@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>海南 7 天自驾 · 万宁陵水深度</title>
+<style>
+:root{
+  --bg:#f6f9fb; --card:#ffffff; --ink:#1f2b36; --ink2:#4a5b68; --muted:#7b8b98;
+  --line:#e3ebf0; --brand:#0f7b8a; --brand2:#149a8c; --accent:#e08a3c; --good:#2f9e6e;
+  --radius:14px; --shadow:0 1px 3px rgba(20,40,60,.06),0 6px 20px rgba(20,40,60,.05);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Hiragino Sans GB","Microsoft YaHei",sans-serif;
+  font-size:15px;line-height:1.65;-webkit-text-size-adjust:100%}
+a{color:var(--brand);text-decoration:none}
+.wrap{max-width:900px;margin:0 auto;padding:0 14px}
+
+/* nav */
+#nav{position:sticky;top:0;z-index:50;background:rgba(246,249,251,.94);backdrop-filter:blur(10px);
+  border-bottom:1px solid var(--line)}
+#nav .wrap{display:flex;gap:4px;overflow-x:auto;padding:8px 14px;scrollbar-width:none}
+#nav .wrap::-webkit-scrollbar{display:none}
+#nav a{flex:0 0 auto;padding:6px 12px;border-radius:999px;color:var(--ink2);font-size:13.5px;white-space:nowrap}
+#nav a.on{background:var(--brand);color:#fff;font-weight:600}
+
+/* hero */
+header.hero{background:linear-gradient(160deg,#0f7b8a 0%,#149a8c 55%,#2f9e6e 100%);color:#fff;padding:26px 0 30px}
+header.hero h1{margin:0 0 6px;font-size:24px;letter-spacing:.5px}
+header.hero p{margin:0;opacity:.92;font-size:14px}
+#metaGrid{margin-top:16px;display:grid;gap:8px}
+.kv{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;
+  background:rgba(255,255,255,.14);border-radius:10px;padding:9px 12px;font-size:13.5px}
+.kv span{opacity:.9;flex:0 0 auto}
+.kv b{font-weight:600;text-align:right}
+#babyNote{margin-top:10px;font-size:13px;background:rgba(255,255,255,.16);
+  border-left:3px solid #ffd48a;padding:8px 12px;border-radius:0 8px 8px 0}
+
+/* sections */
+section{margin:22px 0}
+h2{font-size:19px;margin:0 0 12px;padding-left:11px;border-left:4px solid var(--brand);line-height:1.3}
+h3{font-size:15.5px;margin:16px 0 8px;color:var(--ink2)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--radius);
+  padding:14px;box-shadow:var(--shadow);margin-bottom:12px}
+.note{color:var(--muted);font-size:12.5px;margin:6px 0 0}
+.warn{color:#c0532b}
+.alert{background:#fff6e8;border:1px solid #f3d9b0;color:#8a5a1c;border-radius:10px;padding:9px 12px;font-size:13.5px;margin-bottom:10px}
+
+/* weather */
+.chart{width:100%;height:auto;display:block}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--ink2);margin-top:6px}
+.legend i{display:inline-block;width:11px;height:11px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.citychip{background:#f1f7f9;border:1px solid var(--line);border-radius:10px;padding:8px 11px;margin-top:8px;font-size:13px}
+.citychip b{color:var(--brand)}
+.citychip span{margin-left:8px;color:var(--ink2)}
+.citychip em{display:block;font-style:normal;color:var(--muted);font-size:12.5px;margin-top:3px}
+
+/* ferry */
+.sched{display:inline-block;background:#e8f4f6;color:var(--brand);border:1px solid #cfe6ea;
+  border-radius:8px;padding:5px 10px;margin:0 6px 6px 0;font-weight:600;font-size:14px;font-variant-numeric:tabular-nums}
+ol.steps{margin:0;padding-left:0;list-style:none;counter-reset:s}
+ol.steps li{counter-increment:s;position:relative;padding:6px 0 6px 30px;font-size:13.5px;border-bottom:1px dashed var(--line)}
+ol.steps li:last-child{border-bottom:none}
+ol.steps li .num{position:absolute;left:0;top:6px;width:20px;height:20px;border-radius:50%;
+  background:var(--brand);color:#fff;font-size:11.5px;display:flex;align-items:center;justify-content:center;font-weight:700}
+ul.tiplist,ul.warnlist{margin:0;padding-left:18px;font-size:13.5px;color:var(--ink2)}
+ul.warnlist li{margin:4px 0}
+
+/* itinerary */
+.day{border:1px solid var(--line);border-radius:12px;margin-bottom:10px;background:var(--card);overflow:hidden}
+.day summary{cursor:pointer;padding:12px 14px;display:flex;gap:11px;align-items:center;list-style:none}
+.day summary::-webkit-details-marker{display:none}
+.day .daynum{flex:0 0 auto;background:var(--brand);color:#fff;border-radius:9px;
+  width:38px;height:38px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px}
+.day .daytitle{flex:1;min-width:0}
+.day .daytitle b{display:block;font-size:14.5px}
+.day .daytitle em{font-style:normal;color:var(--muted);font-size:12.5px}
+.day .daybody{padding:0 14px 14px;border-top:1px solid var(--line)}
+.day .kv{background:#f7fafb;color:var(--ink);margin-top:8px}
+.day .kv span{color:var(--muted)}
+.pill{display:inline-block;background:#eef6f7;color:var(--brand);border-radius:6px;
+  padding:2px 8px;margin:2px 4px 2px 0;font-size:12.5px}
+.tips{margin-top:10px;background:#f7fafb;border-radius:10px;padding:9px 12px}
+.tips b{font-size:13px;color:var(--ink2)}
+.tips ul{margin:5px 0 0;padding-left:18px;font-size:13px;color:var(--ink2)}
+
+/* city tabs */
+#cityTabs,#foodTabs{display:flex;gap:7px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+#cityTabs::-webkit-scrollbar,#foodTabs::-webkit-scrollbar{display:none}
+
+/* food */
+#mealChips{display:flex;gap:7px;flex-wrap:wrap;margin:10px 0 12px}
+.mchip{border:1px solid var(--line);background:#fff;border-radius:999px;padding:6px 14px;
+  cursor:pointer;font-size:13.5px;color:var(--ink2)}
+.mchip.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+.meal{border-radius:6px;padding:1px 8px;font-size:12px;font-weight:600;color:#fff}
+.meal.m1{background:#e0a13c}.meal.m2{background:#c0532b}.meal.m3{background:#3f5b8c}.meal.m4{background:#2f9e6e}
+.vbadge{display:inline-block;border-radius:6px;padding:1px 8px;font-size:11.5px;font-weight:600}
+.vbadge.v3{background:#e4f4ec;color:#1c7a52;border:1px solid #b7e0cc}
+.vbadge.v2{background:#eef6f7;color:var(--brand);border:1px solid #cfe6ea}
+.vbadge.v1{background:#fff2e2;color:#a35c14;border:1px solid #f0d3aa}
+.vnote{margin-top:10px;background:#f7fafb;border-radius:9px;padding:8px 11px;font-size:12.5px;color:var(--ink2)}
+.rule{padding:9px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.rule:last-child{border-bottom:none}
+.rule b{display:block;color:var(--brand);margin-bottom:3px}
+.rule span{display:block;color:var(--ink2);margin-bottom:5px}
+.tab{flex:0 0 auto;border:1px solid var(--line);background:var(--card);border-radius:11px;
+  padding:8px 14px;cursor:pointer;font-size:14px;color:var(--ink2);text-align:center;line-height:1.3}
+.tab b{display:block;font-size:15px;color:var(--ink)}
+.tab .pri{font-size:11.5px;color:var(--muted)}
+.tab.on{background:var(--brand);border-color:var(--brand);color:#fff}
+.tab.on b,.tab.on .pri{color:#fff}
+#spotCount{float:right;font-size:12.5px;color:var(--muted);margin-top:6px}
+#spotSearch{width:100%;margin:10px 0 12px;padding:10px 12px;border:1px solid var(--line);
+  border-radius:10px;font-size:14px;background:var(--card);color:var(--ink)}
+#spotSearch:focus{outline:none;border-color:var(--brand)}
+
+/* spot card */
+.spot{border:1px solid var(--line);border-radius:12px;background:var(--card);margin-bottom:10px;overflow:hidden}
+.spot-head{cursor:pointer;padding:12px 14px;display:flex;gap:11px;align-items:flex-start}
+.spot .rank{flex:0 0 auto;width:26px;height:26px;border-radius:8px;background:#eef6f7;color:var(--brand);
+  font-weight:700;font-size:13px;display:flex;align-items:center;justify-content:center;margin-top:2px}
+.spot-main{flex:1;min-width:0}
+.spot-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.spot-title b{font-size:15.5px}
+.rating{color:var(--accent);font-size:13px;font-weight:600}
+.price{background:#fff2e2;color:#a35c14;border-radius:6px;padding:1px 8px;font-size:12.5px;font-weight:600}
+.spot-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:12.5px;color:var(--muted);margin:4px 0 6px}
+.spot-intro{margin:0;font-size:13.5px;color:var(--ink2)}
+.spot-tags{margin-top:7px;display:flex;gap:6px;flex-wrap:wrap}
+.tag{background:#f1f7f9;border:1px solid var(--line);color:var(--brand);border-radius:6px;
+  padding:2px 8px;font-size:11.5px}
+.chev{flex:0 0 auto;color:var(--muted);font-size:13px;transition:transform .2s;margin-top:4px}
+.spot.open .chev{transform:rotate(180deg)}
+.spot-detail{display:none;padding:0 14px 14px;border-top:1px solid var(--line)}
+.spot.open .spot-detail{display:block}
+.dblock{margin-top:12px}
+.dblock h4{margin:0 0 7px;font-size:13.5px;color:var(--brand)}
+.dbody .kv{background:#f7fafb;margin-bottom:5px;font-size:13px}
+.dbody .kv span{color:var(--muted);flex:1 1 auto;padding-right:8px}
+.photo{background:#f7fafb;border-radius:9px;padding:8px 11px;margin-bottom:6px}
+.photo b{display:block;font-size:13.5px}
+.photo em{font-style:normal;color:var(--muted);font-size:12.5px}
+.mapbtn{display:block;text-align:center;margin-top:12px;background:var(--brand2);color:#fff;
+  border-radius:10px;padding:10px;font-size:14px;font-weight:600}
+.mapbtn.alt{background:#e08a3c}
+.navbtns{display:flex;gap:8px}
+.navbtns .mapbtn{flex:1}
+.vnote.poi{background:#eef6f7;border-left:3px solid var(--brand)}
+#amapBox{height:440px;border-radius:12px;overflow:hidden;background:#eef2f5;margin-top:10px}
+
+/* drive */
+.plan{border:1px solid var(--line);border-radius:12px;background:var(--card);margin-bottom:10px;overflow:hidden}
+.plan.rec{border-color:var(--brand);box-shadow:0 0 0 2px rgba(15,123,138,.08)}
+.plan.warnplan{border-color:#e0a13c}
+.plan>summary{cursor:pointer;padding:12px 14px;display:flex;gap:10px;align-items:center;list-style:none}
+.plan>summary::-webkit-details-marker{display:none}
+.plan .ptag{flex:0 0 auto;border-radius:7px;padding:2px 9px;font-size:11.5px;font-weight:700;color:#fff}
+.ptag.A{background:var(--brand)}.ptag.B{background:#2f9e6e}.ptag.C{background:#e0a13c}
+.plan .ptitle{flex:1;min-width:0;font-size:14.5px;font-weight:600}
+.plan .pdesc{padding:0 14px 10px;font-size:13.5px;color:var(--ink2);margin:0}
+.plan .pbody{padding:0 14px 14px;border-top:1px solid var(--line)}
+.tl{margin:10px 0;padding-left:16px;border-left:2px solid var(--line);list-style:none}
+.tl li{position:relative;padding:5px 0 5px 10px;font-size:13px;color:var(--ink2)}
+.tl li::before{content:'';position:absolute;left:-21px;top:12px;width:8px;height:8px;border-radius:50%;
+  background:var(--brand);border:2px solid #fff}
+.proscons{display:grid;gap:10px;margin-top:10px}
+@media(min-width:560px){.proscons{grid-template-columns:1fr 1fr}}
+.pclist{border-radius:10px;padding:9px 12px;font-size:12.5px}
+.pclist.good{background:#eef8f2;border:1px solid #cfe8dc}
+.pclist.bad{background:#fdf3ec;border:1px solid #f2dcc9}
+.pclist b{display:block;font-size:12.5px;margin-bottom:4px}
+.pclist.good b{color:#1c7a52}.pclist.bad b{color:#a35c14}
+.pclist ul{margin:0;padding-left:16px}
+.fit{margin-top:10px;background:#f7fafb;border-radius:9px;padding:8px 11px;font-size:12.5px;color:var(--ink2)}
+.srow{display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13px}
+.srow:last-child{border-bottom:none}
+.srow .sname{flex:0 0 auto;font-weight:600;min-width:96px}
+.srow .sroad{flex:0 0 auto;color:var(--muted);font-size:12px;min-width:104px}
+.srow .snote{flex:1;color:var(--ink2);font-size:12.5px}
+.chip2{display:inline-block;background:#eef6f7;color:var(--brand);border:1px solid #cfe6ea;
+  border-radius:6px;padding:2px 8px;font-size:12px;font-weight:600;white-space:nowrap}
+.verdict{background:#eef6f7;border-left:3px solid var(--brand);border-radius:0 9px 9px 0;
+  padding:9px 12px;font-size:13.5px;margin-bottom:10px}
+.verdict b{color:var(--brand);font-size:14.5px}
+.carCmp{border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:10px;font-size:13px}
+.carCmp b{color:var(--ink)}
+.carCmp .cmp{display:flex;gap:8px;flex-wrap:wrap;margin:4px 0;font-size:12.5px;color:var(--ink2)}
+.carCmp .cmp span{background:#f7fafb;border-radius:6px;padding:1px 7px}
+
+/* budget */
+.brow{display:flex;gap:10px;align-items:flex-start;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.brow .bcat{flex:0 0 92px;font-weight:600}
+.brow .bdet{flex:1;color:var(--muted);font-size:12.5px}
+.brow .bnum{flex:0 0 auto;white-space:nowrap;font-variant-numeric:tabular-nums}
+.brow.total{border-bottom:none;border-top:2px solid var(--brand);margin-top:6px;padding-top:11px;font-size:15px}
+.brow.total .bnum{color:var(--brand);font-size:16px}
+.aaBox{background:#f7fafb;border:1px solid var(--line);border-radius:12px;padding:12px;margin-top:12px}
+.aaBox label{display:block;font-size:12.5px;color:var(--muted);margin:8px 0 3px}
+.aaBox input{width:100%;padding:9px 11px;border:1px solid var(--line);border-radius:9px;font-size:14px;background:#fff;color:var(--ink)}
+.aaBox input:focus{outline:none;border-color:var(--brand)}
+#aaBtns{display:flex;gap:7px;margin-top:8px}
+#aaBtns button{flex:1;border:1px solid var(--line);background:#fff;border-radius:9px;padding:8px;
+  cursor:pointer;font-size:13.5px;color:var(--ink2)}
+#aaBtns button.on{background:var(--brand);border-color:var(--brand);color:#fff;font-weight:600}
+#aaResult{margin-top:10px}
+.kv.total{background:#eef6f7}
+.kv.aa{background:var(--brand);color:#fff;font-size:15px}
+.kv.aa span,.kv.aa b{color:#fff;opacity:1}
+
+/* baby */
+.btip{display:flex;gap:10px;padding:9px 0;border-bottom:1px dashed var(--line);font-size:13.5px}
+.btip:last-child{border-bottom:none}
+.btip b{flex:0 0 84px;color:var(--brand)}
+.btip span{flex:1;color:var(--ink2)}
+
+footer{padding:22px 0 34px;color:var(--muted);font-size:12.5px;text-align:center;line-height:1.8}
+@media(max-width:420px){
+  header.hero h1{font-size:21px}
+  .brow{flex-wrap:wrap}
+  .brow .bdet{flex:1 1 100%;order:3}
+  .kv{flex-direction:column;gap:2px}
+  .kv b{text-align:left}
+}
+</style>
+</head>
+<body>
+
+<nav id="nav"><div class="wrap">
+  <a href="#wx" class="on">天气</a>
+  <a href="#ferry">轮渡</a>
+  <a href="#drive">驾驶方案</a>
+  <a href="#itin">7天行程</a>
+  <a href="#spots">景点库</a>
+  <a href="#food">美食</a>
+  <a href="#map">地图</a>
+  <a href="#budget">预算·AA</a>
+  <a href="#baby">带娃</a>
+</div></nav>
+
+<header class="hero"><div class="wrap">
+  <h1 id="pageTitle">海南 7 天自驾 · 万宁陵水深度</h1>
+  <p id="pageSub"></p>
+  <div id="metaGrid"></div>
+  <div id="babyNote"></div>
+</div></header>
+
+<div class="wrap">
+
+  <section id="wx">
+    <h2>天气 · 什么时候去</h2>
+    <div class="card">
+      <p id="wxBest" style="margin:0 0 10px;font-size:13.5px"></p>
+      <div id="wxChart"></div>
+      <h3>城市差异</h3>
+      <div id="wxCity"></div>
+    </div>
+  </section>
+
+  <section id="ferry">
+    <h2>轮渡 · 新能源过海（最关键）</h2>
+    <div class="card">
+      <div id="ferryPolicy"></div>
+      <h3>每日新能源专班（海安新港 → 秀英港）</h3>
+      <div id="ferrySched"></div>
+      <h3>费用</h3>
+      <div id="ferryPrice"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">过海流程（人车分离）</h3>
+      <ol class="steps" id="ferrySteps"></ol>
+      <h3>避坑提醒</h3>
+      <ul class="warnlist" id="ferryWarn"></ul>
+      <p class="note">咨询电话：<span id="ferryPhone"></span></p>
+    </div>
+  </section>
+
+  <section id="drive">
+    <h2>驾驶方案 · 3 人轮换 · 一口气到海口 or 万宁</h2>
+    <div class="card">
+      <div id="driveRoute"></div>
+      <p class="note" id="drivePlanNote"></p>
+    </div>
+    <div id="drivePlans"></div>
+    <div class="card">
+      <h3 style="margin-top:0">🔁 3 人轮换排班表（约 1250 km）</h3>
+      <div id="driveShifts"></div>
+      <h3>轮换纪律（带娃必须守住）</h3>
+      <ul class="warnlist" id="shiftRules"></ul>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">🛣 沿途服务区节点</h3>
+      <div id="driveStops"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">⚡ 纯电可行性（Model 3）与补能点</h3>
+      <div id="chargeVerdict"></div>
+      <h3>特斯拉超充站（沿线 · 24h）</h3>
+      <div id="superchargers"></div>
+      <h3>徐闻 / 进港前补能</h3>
+      <div id="xuwenCharge"></div>
+      <h3>风险与应对</h3>
+      <ul class="warnlist" id="chargeRisks"></ul>
+    </div>
+  </section>
+
+  <section id="itin">
+    <h2>7 天行程（3 人轮驾 · 直达）</h2>
+    <div id="itinList"></div>
+  </section>
+
+  <section id="spots">
+    <h2>景点库 · 点城市 → 点景点看全部信息</h2>
+    <div id="cityTabs"></div>
+    <div class="card" style="margin-top:10px">
+      <div id="cityIntro"></div>
+      <span id="spotCount"></span>
+      <input id="spotSearch" type="search" placeholder="搜索景点名 / 标签 / 拍照点，如「灯塔」「免费」「亲子」">
+      <div id="spotList"></div>
+    </div>
+  </section>
+
+  <section id="food">
+    <h2>美食库 · 城市 → 早/正/夜 → 店铺全量信息</h2>
+    <p class="note" id="foodMethod" style="margin:0 0 10px"></p>
+    <div id="foodTabs"></div>
+    <div class="card" style="margin-top:10px">
+      <div id="foodIntro"></div>
+      <span id="foodCount" style="float:right;font-size:12.5px;color:var(--muted);margin-top:6px"></span>
+      <div id="mealChips"></div>
+      <div id="foodList"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">🦐 全岛海鲜通用规则（交叉验证结论）</h3>
+      <div id="seafoodRules"></div>
+    </div>
+    <div class="card">
+      <h3 style="margin-top:0">👶 带 10 个月宝宝怎么吃</h3>
+      <div id="babyFoodList"></div>
+    </div>
+  </section>
+
+  <section id="map">
+    <h2>实时地图 · 高德（景点 + 美食打点）</h2>
+    <div class="card">
+      <div id="mapCityTabs" style="display:flex;gap:7px;flex-wrap:wrap"></div>
+      <div id="mapKindTabs" style="display:flex;gap:7px;flex-wrap:wrap;margin-top:8px"></div>
+      <span id="mapCount" style="float:right;font-size:12.5px;color:var(--muted)"></span>
+      <div id="amapBox"></div>
+      <p class="note">点位为高德官方 POI 坐标（80 个点位全部匹配成功）。点击标记可直接在地图上导航。</p>
+    </div>
+  </section>
+
+  <section id="budget">
+    <h2>预算 · 路费过路费 AA</h2>
+    <div class="card">
+      <div id="budgetTable"></div>
+      <div class="aaBox">
+        <h3 style="margin-top:0">AA 分摊计算器</h3>
+        <p class="note" id="aaNote"></p>
+        <label>过路费（元，往返合计）</label>
+        <input id="aaToll" type="number" inputmode="numeric">
+        <label>路费 · 电费 / 油费（元）</label>
+        <input id="aaFuel" type="number" inputmode="numeric">
+        <label>分摊人数</label>
+        <div id="aaBtns">
+          <button data-n="3">3 人（不含婴儿）</button>
+          <button data-n="4" class="on">4 人</button>
+        </div>
+        <input id="aaPeople" type="number" inputmode="numeric" min="1">
+        <div id="aaResult"></div>
+      </div>
+    </div>
+  </section>
+
+  <section id="baby">
+    <h2>带娃专项（谢知仁 · 约 10-11 个月）</h2>
+    <div class="card"><div id="babyList"></div></div>
+  </section>
+
+  <footer>
+    数据核实于 <span id="updated"></span>｜来源：广东省交通运输厅（轮渡政策）、景区官网、携程/同程票务、去哪儿攻略<br>
+    票价与开放时间为调研区间参考值，出行前请以官方小程序当日披露为准<br>
+    地图服务：腾讯地图（点击景点内「在腾讯地图打开」跳转官方地图）
+  </footer>
+
+</div>
+
+<script src="config.js"></script>
+<script src="data.js"></script>
+<script src="food.js"></script>
+<script src="coords.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
